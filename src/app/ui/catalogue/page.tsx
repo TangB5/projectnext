@@ -27,8 +27,7 @@ export default function Catalogue() {
 
     const fetchProducts = async () => {
       try {
-        // CORRECTION DE L'URL
-        const res = await fetch(`${API_BASE_URL}/api/products`);
+        const res = await fetch(`${API_BASE_URL}api/products`);
         if (!res.ok) {
           throw new Error('Erreur lors du chargement des produits');
         }
@@ -57,7 +56,7 @@ export default function Catalogue() {
     localStorage.setItem("likedProducts", JSON.stringify(newLikedProducts));
 
     // Appel API (persistance dans la BDD)
-    const res = await fetch(`${API_BASE_URL}/api/products/${productId}/toggle-like`, {
+    const res = await fetch(`${API_BASE_URL}api/products/${productId}/toggle-like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ like: !alreadyLiked }),
