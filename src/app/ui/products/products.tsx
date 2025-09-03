@@ -8,10 +8,9 @@ import { Product } from "@/app/types";
 export function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
-  const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:3000/api';
+  const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
   useEffect(() => {
-    // Récupérer les likes depuis le local storage
     const savedLikes = localStorage.getItem("likedProducts");
     if (savedLikes) {
       setLikedProducts(JSON.parse(savedLikes));
@@ -19,7 +18,7 @@ export function Products() {
 
     async function fetchData() {
       try {
-        const res = await fetch(`${API_BASE_URL}/products`); // Utilisez l'URL de base
+        const res = await fetch(`${API_BASE_URL}/api/products`); 
         if (!res.ok) {
           throw new Error("Failed to fetch products");
         }
@@ -62,8 +61,7 @@ export function Products() {
       
     } catch (error) {
       console.error("Erreur lors du like :", error);
-      // En cas d'erreur, annuler le changement local pour rester synchro
-      // C'est un point à améliorer pour une application réelle.
+      
     }
   };
 
