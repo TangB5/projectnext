@@ -34,7 +34,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:30
         toast.error(errorData.message || 'La connexion a échoué.');
       } else {
         toast.success('Connexion réussie !');
-        router.push('/dashboard');
+        router.push('/');
       }
     } catch  {
       setError('Une erreur est survenue.');
