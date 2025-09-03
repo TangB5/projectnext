@@ -1,30 +1,23 @@
 'use server'
 import { z } from "zod";
 import { deleteSession, getSession } from "../lib/session";
-import { redirect } from "next/navigation";
 import { Product, Commande, ProductData, OrderItem } from "../types";
-import { revalidatePath } from "next/cache"; // Importe revalidatePath
+import { revalidatePath } from "next/cache";
 
-
-const API_BASE_URL = process.env.BACKEND_URL || 'http://localhost:3000/api';
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL 
 
 // ---------- Produits ----------
 export const createProduct = async (productData: ProductData): Promise<Product> => {
   const response = await fetch(`${API_BASE_URL}/api/auth/createProduct`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(productData),
   });
-
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || 'Erreur lors de la création du produit');
   }
-
-  revalidatePath('/dashboard/products'); // Revalider la liste des produits après la création
+  revalidatePath('/dashboard/products');
   return await response.json();
 };
 
@@ -35,11 +28,9 @@ export const getProducts = async (): Promise<Product[]> => {
 };
 
 export const deleteProduit = async (id: string): Promise<unknown> => {
-  const response = await fetch(`${API_BASE_URL}/api/product/${id}`, {
-    method: 'DELETE',
-  });
+  const response = await fetch(`${API_BASE_URL}/api/product/${id}`, { method: 'DELETE' });
   if (!response.ok) throw new Error('Échec de la suppression');
-  revalidatePath('/dashboard/products'); // Revalider après la suppression
+  revalidatePath('/dashboard/products');
   return await response.json();
 };
 
@@ -49,40 +40,41 @@ export const updateProduit = async (
 ): Promise<Product> => {
   const response = await fetch(`${API_BASE_URL}/api/product/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(productData),
   });
-
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Erreur lors de la mise à jour du produit");
   }
-
-  revalidatePath('/dashboard/products'); // Revalider après la mise à jour
+  revalidatePath('/dashboard/products');
   return await response.json();
 };
 
 
-// ---------- Authentification ----------
-const loginSchema = z.object({
-  email: z.string().email({ message: "Adresse e-mail invalide" }).trim(),
-  password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères" }).trim(),
-});
 
-export async function login(prevState: unknown, formData: FormData) {
-  const result = loginSchema.safeParse(Object.fromEntries(formData));
-  if (!result.success) return { errors: result.error.flatten().fieldErrors };
+//login
 
-  const { email, password } = result.data;
+export async function login(data: { email: string; password: string }) {
+  const { email, password } = data;
+
+  // validation
+  const loginSchema = z.object({
+    email: z.string().email().trim(),
+    password: z.string().min(8).trim(),
+  });
+
+  const result = loginSchema.safeParse({ email, password });
+  if (!result.success) {
+    return { errors: result.error.flatten().fieldErrors };
+  }
 
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-      credentials: "include"
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -90,92 +82,89 @@ export async function login(prevState: unknown, formData: FormData) {
       return { errors: { email: [message || "Email ou mot de passe incorrect."] } };
     }
 
-    revalidatePath('/dashboard'); // Revalider le dashboard pour afficher le nouveau statut de session
-    redirect('/dashboard'); // Redirige après une connexion réussie
     return { success: true };
-
   } catch (error) {
-    console.error("Erreur de connexion :", error);
+    console.error(error);
     return { errors: { email: ["Erreur serveur."] } };
   }
 }
 
 
-// app/api/route.ts
 export async function logout() {
-  await deleteSession(); // supprime la session côté serveur
+  await deleteSession();
   return { success: true };
 }
 
+// Register avec objet simple
 
-export async function register(prevState: unknown, formData: FormData) {
+export async function register(data: {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  const { name, email, password, confirmPassword } = data;
+
+  // Validation côté frontend
+  const errors: Record<string, string[]> = {};
+  if (!name) errors.name = ['Le nom est requis'];
+  if (!email) errors.email = ['L\'email est requis'];
+  if (!password) errors.password = ['Le mot de passe est requis'];
+  if (password !== confirmPassword) errors.confirmPassword = ['Les mots de passe ne correspondent pas'];
+
+  if (Object.keys(errors).length > 0) {
+    return { success: false, errors };
+  }
+
   try {
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirmPassword');
-    if (password !== confirmPassword) {
-      return { errors: { confirmPassword: 'Les mots de passe ne correspondent pas' }, success: false };
-    }
-
-    const userData = { name: formData.get('name'), email: formData.get('email'), password };
     const response = await fetch(`${API_BASE_URL}/api/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
+      body: JSON.stringify({ name, email, password }),
     });
 
-    const data = await response.json();
+    const responseData = await response.json();
+
     if (!response.ok) {
-      return { errors: data.errors || { general: data.message }, success: false };
+      // Si le backend renvoie des erreurs spécifiques, on les renvoie
+      const backendErrors: Record<string, string[]> = {};
+      if (responseData.message?.includes('email')) {
+        backendErrors.email = ['Cet email est déjà utilisé'];
+      } else if (responseData.errors) {
+        Object.assign(backendErrors, responseData.errors);
+      } else {
+        backendErrors.general = [responseData.message || 'Erreur serveur'];
+      }
+      return { success: false, errors: backendErrors };
     }
 
-    // Pas de revalidation ou redirection ici, car l'utilisateur doit se connecter après l'inscription
     return { success: true, message: 'Inscription réussie !', errors: null };
   } catch (error) {
     console.error('Erreur lors de l\'inscription:', error);
-    return { errors: { general: 'Une erreur est survenue' }, success: false };
+    return { success: false, errors: { general: ['Une erreur est survenue'] } };
   }
 }
 
+
 // ---------- Commandes ----------
-// src/app/api/route.js (ou l'emplacement de votre helper)
-
-
-export async function createCommande(userId : string, items:OrderItem[]) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // C'EST L'ÉTAPE CLÉ : envoyer un objet avec les bonnes clés
-      body: JSON.stringify({
-        userId: userId,
-        items: items,
-      }),
-    });
-
-    if (!response.ok) {
-      // Si la réponse n'est pas OK, lance une erreur avec le message du serveur
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Erreur lors de la création de la commande');
-    }
-
-    const result = await response.json();
-    return result;
-
-  } catch (error) {
-    console.error("Erreur dans createCommande :", error);
-    throw error;
+export async function createCommande(userId: string, items: OrderItem[]) {
+  const response = await fetch(`${API_BASE_URL}/api/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, items }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Erreur lors de la création de la commande');
   }
+  return await response.json();
 }
 
 export async function getMyCommandes(): Promise<Commande[]> {
   const session = await getSession();
   if (!session?.userId) throw new Error("Non autorisé");
 
-  const response = await fetch(`${API_BASE_URL}/api/commandes/user/${session.userId}`, {
-    cache: 'no-store' // S'assure que les données ne sont pas en cache
-  });
+  const response = await fetch(`${API_BASE_URL}/api/commandes/user/${session.userId}`, { cache: 'no-store' });
   if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
   return await response.json();
 }
@@ -184,9 +173,7 @@ export async function getAllCommandes(): Promise<Commande[]> {
   const session = await getSession();
   if (session?.role !== "admin") throw new Error("Accès refusé");
 
-  const response = await fetch(`${API_BASE_URL}/api/commandes`, {
-    cache: 'no-store'
-  });
+  const response = await fetch(`${API_BASE_URL}/api/commandes`, { cache: 'no-store' });
   if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
   return await response.json();
 }
@@ -200,9 +187,8 @@ export async function updateCommandeStatus(id: string, status: Commande["status"
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
   });
-
   if (!response.ok) throw new Error("Erreur lors de la mise à jour");
-  revalidatePath('/dashboard/commandes'); // Revalide le tableau de bord des commandes
+  revalidatePath('/dashboard/commandes');
   return await response.json();
 }
 
@@ -212,6 +198,6 @@ export async function deleteCommande(id: string) {
 
   const response = await fetch(`${API_BASE_URL}/api/commande/${id}`, { method: 'DELETE' });
   if (!response.ok) throw new Error("Erreur lors de la suppression");
-  revalidatePath('/dashboard/commandes'); // Revalide après la suppression
+  revalidatePath('/dashboard/commandes');
   return await response.json();
 }

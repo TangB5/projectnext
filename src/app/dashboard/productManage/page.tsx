@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../pagination/paginatio1";
 import Image from "next/image";
 import { toast } from 'react-toastify';
-import { createProduct, getProducts, deleteProduit, updateProduit } from "@/app/api/route";
+import { createProduct, getProducts, deleteProduit, updateProduit } from "@/app/lib/apiHelpers";
 import { supabase } from "../../lib/supabaseClient";
 import { Product } from "@/app/types";
 
