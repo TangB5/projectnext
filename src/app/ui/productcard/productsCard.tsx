@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CheckCircle, Frown, XCircle } from "lucide-react";
 import { Product } from "@/app/types";
 import { useSession } from "../../lib/SessionProvider";
-import { createCommande } from "@/app/api/route";
+import { createCommande } from "@/app/lib/apiHelpers";
 
 interface ProductsCardsProps {
   products: Product[];

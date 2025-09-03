@@ -1,5 +1,5 @@
 
-interface CardsProps {
+ export interface CardsProps {
     bgcolor: string;
     text: string;   
     icon: string;

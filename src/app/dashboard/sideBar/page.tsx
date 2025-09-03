@@ -1,6 +1,6 @@
 'use client';
 
-import { logout } from "@/app/api/route";
+import { logout } from "@/app/lib/apiHelpers";
 import { Dispatch, SetStateAction } from "react";
 import { motion } from "framer-motion";
 

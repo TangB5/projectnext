@@ -1,7 +1,7 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
-import { register } from '@/app/api/route'
+import { register } from '@/app/lib/apiHelpers'
 import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 

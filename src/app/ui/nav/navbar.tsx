@@ -5,7 +5,7 @@ import { useSession } from '../../lib/SessionProvider';
 import { useRouter } from 'next/navigation';
 import { SessionPayload } from '../../lib/type';
 import { motion, AnimatePresence } from 'framer-motion';
-import { logout } from '@/app/api/route';
+import { logout } from '@/app/lib/apiHelpers';
 
 export function Navbar() {
   const { session, loading } = useSession() as { session: SessionPayload | null, loading: boolean }; 
