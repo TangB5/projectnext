@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       
       {
         protocol: 'https',
-        hostname: 'https://memo-backend-sigma.vercel.app/',
+        hostname: 'https://memo-backend-sigma.vercel.app',
         pathname: '/**',
       },
     ],
