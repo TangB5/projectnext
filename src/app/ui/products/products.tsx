@@ -18,7 +18,7 @@ export function Products() {
 
     async function fetchData() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/products`); 
+        const res = await fetch(`${API_BASE_URL}api/products`); 
         if (!res.ok) {
           throw new Error("Failed to fetch products");
         }
