@@ -1,19 +1,33 @@
-import { NextConfig } from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'localhost', pathname: '/**' },
-      { protocol: 'https', hostname: 'jjoaiktmljbilrjxeqxk.supabase.co', pathname: '/**' },
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+      {
+        protocol: 'https',
+        hostname: 'jjoaiktmljbilrjxeqxk.supabase.co',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      
+      {
+        protocol: 'https',
+        hostname: 'https://memo-backend-sigma.vercel.app/',
+        pathname: '/**',
+      },
     ],
   },
-  experimental: {
-    allowedDevOrigins: ['http://192.168.188.36:3001'], 
-  },
+
   async rewrites() {
     return [
-      { source: '/api/:path*', destination: 'http://localhost:3000/api/:path*' },
+      {
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/:path*`,
+      },
     ];
   },
 };

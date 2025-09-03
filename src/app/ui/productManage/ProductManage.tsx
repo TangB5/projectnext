@@ -1,7 +1,7 @@
 "use client";
 import { Dispatch, SetStateAction, useRef } from "react";
 import { useState, useEffect } from "react";
-import Pagination from "../pagination/paginatio1";
+import Pagination from "../../dashboard/pagination/paginatio1";
 import Image from "next/image";
 import { toast } from 'react-toastify';
 import { createProduct, getProducts, deleteProduit, updateProduit } from "@/app/lib/apiHelpers";

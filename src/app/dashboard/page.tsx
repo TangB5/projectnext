@@ -2,8 +2,8 @@
 import '../globals.css';
 import { useState} from 'react';
 import 'primeicons/primeicons.css';
-import SideBare from './sideBar/page';
-import Main from './main/page';
+import SideBare from '../ui/sideBar/Sidebar';
+import Main from  "@/app/ui/main/Main";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import useMobileDetection from './Mobile/useMobileDetection';

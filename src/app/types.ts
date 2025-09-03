@@ -55,3 +55,16 @@ export interface OrderItem {
   quantity: number;
   price: number;
 }
+export interface Customer {
+    id: string; // Utilisez string pour correspondre aux identifiants du backend
+    name: string;
+    email: string;
+    phone: string;
+    orders: number;
+    totalSpent: number;
+    lastOrder: string;
+}
+
+export interface CustomerManageProps {
+    activeTab: string;
+}

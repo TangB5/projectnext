@@ -11,7 +11,7 @@ type Product = {
   name: string;
   image: string;
   price: number;
-  likes: number; // Le champ 'likes' est correctement nommé ici
+  likes: number;
   category?: string;
   isNew?: boolean;
 };
