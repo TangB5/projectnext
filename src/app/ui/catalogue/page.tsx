@@ -8,7 +8,7 @@ import { Product, OrderItem } from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProductApi } from '@/app/hooks/useProductApi';
 import { useApi } from "@/app/hooks/useApi";
-import { useAuth } from "@/app/hooks/useAuth";
+import  useAuth  from "@/app/hooks/useAuth";
 import ProductCard from '../component/productcard/productCard';
 import { productsReducer, initialState } from "../component/productcard/productsReducer";
 import LoginModal from "../component/modals/LoginModal";
@@ -24,7 +24,6 @@ interface FilterButtonProps {
   isMobile?: boolean;
 }
 
-// Composant de bouton de filtre réutilisable
 const FilterButton = ({ category, activeFilter, onClick, isMobile = false }: FilterButtonProps) => (
   <motion.button
     key={category}
@@ -91,10 +90,8 @@ export default function Catalogue() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [activeFilter, setActiveFilter] = useState('Tous');
   const { fetchProducts, createOrder } = useApi();
-    const { isAuthenticated } = useAuth();
+  const {  isAuthenticated, loading } = useAuth();  
   
-  
-  const [loading, setLoading] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,12 +114,11 @@ export default function Catalogue() {
       setAllProducts(products);
       setFilteredProducts(products);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erreur inconnue';
-      dispatch({ type: 'FETCH_PRODUCTS_FAILURE', payload: message });
-    } finally {
-      setLoading(false); 
-    }
-  };
+        const message =
+          error instanceof Error ? error.message : "Erreur inconnue";
+        dispatch({ type: "FETCH_PRODUCTS_FAILURE", payload: message });
+      }
+    };
 
   initializeData();
 }, [fetchProducts]);
@@ -210,14 +206,15 @@ export default function Catalogue() {
     router.push('/');
   };
    const handleOrder = useCallback((product: Product) => {
-      dispatch({ type: 'SELECT_PRODUCT', payload: product });
-      
-      if (!isAuthenticated) {
-        dispatch({ type: 'SHOW_LOGIN_MODAL' });
-      } else {
-        dispatch({ type: 'SHOW_CONFIRM_MODAL' });
-      }
-    }, [isAuthenticated]);
+  dispatch({ type: 'SELECT_PRODUCT', payload: product });
+  
+  if (!isAuthenticated) {
+    dispatch({ type: 'SHOW_LOGIN_MODAL' });
+  } else {
+    dispatch({ type: 'SHOW_CONFIRM_MODAL' });
+  }
+}, [isAuthenticated]);
+
 
   const confirmOrder = async () => {
       if (!state.selectedProduct) return;

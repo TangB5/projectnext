@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import 'primeicons/primeicons.css'; 
-import { useSession } from '../../lib/SessionProvider';
+import { useSession } from '../../lib/authProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type OrderItem = {

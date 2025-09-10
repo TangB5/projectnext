@@ -14,7 +14,7 @@ export async function getSession() {
   }
   
   
-  const response = await fetch(`${process.env.BACKEND_URL}/api/session`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/session`, {
     headers: {
       Cookie: `authToken=${authToken.value}`,
     },

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import useAuth from '@/app/hooks/useAuth'; 
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -12,16 +13,18 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
+  const { refreshSession } = useAuth(); 
 
+  
+  const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
-  const handleSubmit = async  (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}api/auth/login`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -29,15 +32,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:30
       });
 
       if (!res.ok) {
-  const errorData = await res.json();
-  setError(errorData.message || 'La connexion a échoué.');
-  toast.error(errorData.message || 'La connexion a échoué.');
-} else {
-  toast.success('Connexion réussie !');
-  router.push('/');
-}
+        const errorData = await res.json();
+        setError(errorData.message || 'La connexion a échoué.');
+        toast.error(errorData.message || 'La connexion a échoué.');
+      } else {
+        toast.success('Connexion réussie !');
 
-    } catch  {
+        
+        await refreshSession();
+
+        
+        router.push('/');
+      }
+    } catch {
       setError('Une erreur est survenue.');
       toast.error('Une erreur est survenue.');
     } finally {
