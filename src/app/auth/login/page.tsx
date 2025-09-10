@@ -29,13 +29,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:30
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        setError(errorData.message || 'La connexion a échoué.');
-        toast.error(errorData.message || 'La connexion a échoué.');
-      } else {
-        toast.success('Connexion réussie !');
-        router.push('/');
-      }
+  const errorData = await res.json();
+  setError(errorData.message || 'La connexion a échoué.');
+  toast.error(errorData.message || 'La connexion a échoué.');
+} else {
+  toast.success('Connexion réussie !');
+  router.push('/');
+}
+
     } catch  {
       setError('Une erreur est survenue.');
       toast.error('Une erreur est survenue.');

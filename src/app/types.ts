@@ -32,7 +32,6 @@ export interface ProductData {
   oldPrice?: number | null;
 }
 
-
 export interface User {
   _id: string;
   email: string;
@@ -49,22 +48,26 @@ export interface Commande {
   createdAt: string;
 }
 
-
 export interface OrderItem {
   productId: string;
   quantity: number;
   price: number;
 }
+
+export interface OrderRequest {
+  products: OrderItem[];
+}
+
 export interface Customer {
-    id: string; // Utilisez string pour correspondre aux identifiants du backend
-    name: string;
-    email: string;
-    phone: string;
-    orders: number;
-    totalSpent: number;
-    lastOrder: string;
+  id: string; // Utilisez string pour correspondre aux identifiants du backend
+  name: string;
+  email: string;
+  phone: string;
+  orders: number;
+  totalSpent: number;
+  lastOrder: string;
 }
 
 export interface CustomerManageProps {
-    activeTab: string;
+  activeTab: string;
 }
