@@ -1,18 +1,13 @@
 "use client";
 
 import { useState, useEffect, MouseEvent } from "react";
-import "primeicons/primeicons.css";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import  useAuth  from "@/app/hooks/useAuth"; 
+import toast from "react-hot-toast";
+import { useAuth } from "@/app/lib/authProvider"; 
 
 export function Navbar() {
-  const {
-    session,
-    isAuthenticated,
-    loading,
-    logout,
-  } = useAuth();
+  const { session, isAuthenticated, loading, logout } = useAuth(); 
 
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -21,7 +16,6 @@ export function Navbar() {
   const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
 
-  
   useEffect(() => {
     setCartCount(isAuthenticated ? 3 : 0);
   }, [isAuthenticated]);
@@ -30,10 +24,7 @@ export function Navbar() {
     e.preventDefault();
     const element = document.getElementById(targetId);
     if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
       setIsOpen(false);
     }
   };
@@ -45,17 +36,17 @@ export function Navbar() {
 
   const handleLogoutConfirm = async () => {
     try {
-      await logout(); 
+      await logout();
       setShowLogoutModal(false);
-      router.push("/"); 
+      toast.success("Déconnexion réussie !");
+      router.push("/");
     } catch (err) {
       console.error("Erreur lors de la déconnexion:", err);
+      toast.error("Impossible de se déconnecter.");
     }
   };
 
-  const handleLogoutCancel = () => {
-    setShowLogoutModal(false);
-  };
+  const handleLogoutCancel = () => setShowLogoutModal(false);
 
   const handleExploreCatalog = () => {
     setShowLogoutModal(false);
@@ -82,13 +73,7 @@ export function Navbar() {
               className="flex items-center space-x-2 cursor-pointer"
               onClick={() => router.push("/")}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="28"
-                height="28"
-                className="text-white"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" className="text-white">
                 <path
                   fill="currentColor"
                   d="M20 9V7c0-1.65-1.35-3-3-3H7C5.35 4 4 5.35 4 7v2c-1.65 0-3 1.35-3 3v5c0 1.65 1.35 3 3 3v1c0 .55.45 1 1 1s1-.45 1-1v-1h12v1c0 .55.45 1 1 1s1-.45 1-1v-1c1.65 0 3-1.35 3-3v-5c0-1.65-1.35-3-3-3zM6 7c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v2.78c-.61.55-1 1.34-1 2.22v2H7v-2c0-.88-.39-1.67-1-2.22V7zm15 10c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-5c0-.55.45-1 1-1s1 .45 1 1v4h14v-4c0-.55.45-1 1-1s1 .45 1 1v5z"
@@ -99,25 +84,13 @@ export function Navbar() {
 
             {/* Menu desktop */}
             <div className="hidden md:flex items-center space-x-8">
-              <a
-                href="#products"
-                onClick={(e) => handleSmoothScroll(e, "products")}
-                className="text-white hover:text-stone-200 font-medium"
-              >
+              <a href="#products" onClick={(e) => handleSmoothScroll(e, "products")} className="text-white hover:text-stone-200 font-medium">
                 Nos Produits
               </a>
-              <a
-                href="#about"
-                onClick={(e) => handleSmoothScroll(e, "about")}
-                className="text-white hover:text-stone-200 font-medium"
-              >
+              <a href="#about" onClick={(e) => handleSmoothScroll(e, "about")} className="text-white hover:text-stone-200 font-medium">
                 À Propos
               </a>
-              <a
-                href="#contact"
-                onClick={(e) => handleSmoothScroll(e, "contact")}
-                className="text-white hover:text-stone-200 font-medium"
-              >
+              <a href="#contact" onClick={(e) => handleSmoothScroll(e, "contact")} className="text-white hover:text-stone-200 font-medium">
                 Contact
               </a>
 
@@ -125,9 +98,9 @@ export function Navbar() {
                 <div className="w-24 h-8 bg-gray-600 rounded-lg animate-pulse" />
               ) : isAuthenticated ? (
                 <>
-                  <a
+                  <button
                     onClick={() => router.push("/cart")}
-                    className="relative text-white hover:text-stone-200 cursor-pointer"
+                    className="relative text-white hover:text-stone-200"
                   >
                     <i className="pi pi-shopping-cart text-xl" />
                     {cartCount > 0 && (
@@ -135,7 +108,7 @@ export function Navbar() {
                         {cartCount}
                       </span>
                     )}
-                  </a>
+                  </button>
 
                   <div className="relative">
                     <button
@@ -143,7 +116,7 @@ export function Navbar() {
                       className="text-white hover:text-stone-200 flex items-center gap-2"
                     >
                       <i className="pi pi-user text-xl" />
-                      {session?.user?.email || "Mon Profil"}
+                      {session?.user?.name || "Mon Profil"}
                     </button>
                     <AnimatePresence>
                       {showProfileMenu && (
@@ -154,20 +127,24 @@ export function Navbar() {
                           transition={{ duration: 0.2 }}
                           className="absolute top-10 right-0 bg-white rounded-lg shadow-lg py-2 w-48 text-gray-800 z-10"
                         >
-                          <a
-                            href="/profile"
-                            className="block px-4 py-2 hover:bg-gray-100 flex items-center"
-                            onClick={() => setShowProfileMenu(false)}
+                          <button
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              router.push("/profile");
+                            }}
+                            className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center"
                           >
                             <i className="pi pi-user mr-2" /> Mon profil
-                          </a>
-                          <a
-                            href="/my-orders"
-                            className="block px-4 py-2 hover:bg-gray-100 flex items-center"
-                            onClick={() => setShowProfileMenu(false)}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              router.push("/my-orders");
+                            }}
+                            className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center"
                           >
                             <i className="pi pi-list mr-2" /> Mes commandes
-                          </a>
+                          </button>
                           <hr className="my-1 border-gray-200" />
                           <button
                             onClick={handleLogoutClick}
@@ -181,52 +158,33 @@ export function Navbar() {
                   </div>
                 </>
               ) : (
-                <a
-                  href="/auth/login"
+                <button
+                  onClick={() => router.push("/auth/login")}
                   className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium"
                 >
                   Espace Pro
-                </a>
+                </button>
               )}
             </div>
 
             {/* Bouton menu mobile */}
             <div className="md:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="text-white focus:outline-none"
-              >
+              <button onClick={() => setIsOpen(!isOpen)} className="text-white focus:outline-none">
                 <i className={`pi ${isOpen ? "pi-times" : "pi-bars"} text-2xl`}></i>
               </button>
             </div>
           </div>
 
           {/* Menu mobile */}
-          <div
-            className={`md:hidden overflow-hidden transition-all duration-300 ${
-              isOpen ? "max-h-96 py-4" : "max-h-0"
-            }`}
-          >
+          <div className={`md:hidden overflow-hidden transition-all duration-300 ${isOpen ? "max-h-96 py-4" : "max-h-0"}`}>
             <div className="flex flex-col space-y-4 mt-4">
-              <a
-                href="#products"
-                onClick={(e) => handleSmoothScroll(e, "products")}
-                className="text-white hover:text-stone-200 font-medium px-2 py-1"
-              >
+              <a href="#products" onClick={(e) => handleSmoothScroll(e, "products")} className="text-white hover:text-stone-200 font-medium px-2 py-1">
                 Nos Produits
               </a>
-              <a
-                href="#about"
-                onClick={(e) => handleSmoothScroll(e, "about")}
-                className="text-white hover:text-stone-200 font-medium px-2 py-1"
-              >
+              <a href="#about" onClick={(e) => handleSmoothScroll(e, "about")} className="text-white hover:text-stone-200 font-medium px-2 py-1">
                 À Propos
               </a>
-              <a
-                href="#contact"
-                onClick={(e) => handleSmoothScroll(e, "contact")}
-                className="text-white hover:text-stone-200 font-medium px-2 py-1"
-              >
+              <a href="#contact" onClick={(e) => handleSmoothScroll(e, "contact")} className="text-white hover:text-stone-200 font-medium px-2 py-1">
                 Contact
               </a>
 
@@ -234,7 +192,7 @@ export function Navbar() {
                 <div className="w-full h-10 bg-gray-600 rounded-lg animate-pulse" />
               ) : isAuthenticated ? (
                 <>
-                  <a
+                  <button
                     onClick={() => {
                       router.push("/cart");
                       setIsOpen(false);
@@ -243,15 +201,17 @@ export function Navbar() {
                   >
                     <i className="pi pi-shopping-cart mr-2" />
                     Panier ({cartCount})
-                  </a>
-                  <a
-                    href="/profile"
+                  </button>
+                  <button
+                    onClick={() => {
+                      router.push("/profile");
+                      setIsOpen(false);
+                    }}
                     className="text-white hover:text-stone-200 font-medium px-2 py-1 flex items-center"
-                    onClick={() => setIsOpen(false)}
                   >
                     <i className="pi pi-user mr-2" />
                     Mon Profil
-                  </a>
+                  </button>
                   <button
                     onClick={handleLogoutClick}
                     className="w-full text-left text-red-400 hover:text-red-300 font-medium px-2 py-1 flex items-center"
@@ -261,19 +221,19 @@ export function Navbar() {
                   </button>
                 </>
               ) : (
-                <a
-                  href="/auth/login"
+                <button
+                  onClick={() => router.push("/auth/login")}
                   className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-center font-medium mt-2"
                 >
                   Espace Pro
-                </a>
+                </button>
               )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* ✅ Modale de déconnexion */}
+      
       <AnimatePresence>
         {showLogoutModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -286,28 +246,14 @@ export function Navbar() {
             >
               <div className="flex items-start">
                 <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mr-4">
-                  <svg
-                    className="h-6 w-6 text-red-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
+                  <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Oh là là, vous nous quittez déjà ?
-                  </h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Oh là là, vous nous quittez déjà ?</h3>
                   <p className="text-gray-600 mb-4">
-                    Avez-vous eu le temps de visiter notre nouveau catalogue ?
-                    Nous avons ajouté des pièces exclusives qui pourraient vous
-                    plaire !
+                    Avez-vous eu le temps de visiter notre nouveau catalogue ? Nous avons ajouté des pièces exclusives qui pourraient vous plaire !
                   </p>
 
                   <div className="mt-6 flex flex-col sm:flex-row gap-3">

@@ -1,4 +1,3 @@
-import { Navbar } from './ui/nav/navbar';
 import { Hero } from './ui/hero/hero';
 import { Avantages } from './ui/avantage/avantage';
 import { About } from './ui/about/apropos';
@@ -11,7 +10,7 @@ export default function Home() {
   return (    
     <div className='bg-gray-50'>
        {/* <!-- Navigation principale --> */}
-   <Navbar />
+   
 
     {/* <!-- Hero Section --> */}
    <Hero />

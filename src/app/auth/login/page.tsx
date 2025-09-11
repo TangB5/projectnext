@@ -1,10 +1,10 @@
 'use client'
 
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
-import useAuth from '@/app/hooks/useAuth'; 
+import useAuth from '@/app/hooks/useAuth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,38 +13,58 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const { refreshSession } = useAuth(); 
+  const { isAuthenticated, loading, refreshSession,session } = useAuth();
 
-  
   const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+
+
+ useEffect(() => {
+  if (!loading && isAuthenticated) {
+    if (session?.user?.roles?.includes('admin')) {
+      router.push('/dashboard');
+    } else {
+      router.push('/');
+    }
+  }
+}, [isAuthenticated, loading, session, router]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsPending(true);
     setError(null);
 
+    if (!email || !password) {
+      setError('Veuillez remplir tous les champs.');
+      toast.error('Veuillez remplir tous les champs.');
+      return;
+    }
+
+    setIsPending(true);
+
     try {
-      const res = await fetch(`${API_BASE_URL}api/auth/login`, { 
+      const res = await fetch(`${API_BASE_URL}api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        setError(errorData.message || 'La connexion a échoué.');
-        toast.error(errorData.message || 'La connexion a échoué.');
-      } else {
-        toast.success('Connexion réussie !');
+      const data = await res.json().catch(() => null);
 
-        
-        await refreshSession();
-
-        
-        router.push('/');
+      if (!res.ok || !data?.user) {
+        const message = data?.message || 'La connexion a échoué.';
+        setError(message);
+        toast.error(message);
+        return;
       }
-    } catch {
+
+      toast.success('Connexion réussie !');
+      await refreshSession();
+      router.refresh();
+      router.push('/');
+
+    } catch (err) {
+      console.error('Erreur lors du login :', err);
       setError('Une erreur est survenue.');
       toast.error('Une erreur est survenue.');
     } finally {
@@ -90,26 +110,24 @@ export default function LoginPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100 w-full">
+        <p>Chargement de la session...</p>
+      </div>
+    );
+  }
+
   return (
     <section className="min-h-screen flex items-center justify-center p-4 bg-gray-100 w-full">
       <div className="flex flex-col md:flex-row bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full">
-        <div className="hidden md:block md:w-1/2 bg-[url('https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80')] bg-cover bg-center relative">
+        <div className="hidden md:block md:w-1/2 bg-[url('https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')] bg-cover bg-center relative">
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" className="text-white">
-              <path fill="currentColor" d="M20 9V7c0-1.65-1.35-3-3-3H7C5.35 4 4 5.35 4 7v2c-1.65 0-3 1.35-3 3v5c0 1.65 1.35 3 3 3v1c0 .55.45 1 1 1s1-.45 1-1v-1h12v1c0 .55.45 1 1 1s1-.45 1-1v-1c1.65 0 3-1.35 3-3v-5c0-1.65-1.35-3-3-3zM6 7c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v2.78c-.61.55-1 1.34-1 2.22v2H7v-2c0-.88-.39-1.67-1-2.22V7zm15 10c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-5c0-.55.45-1 1-1s1 .45 1 1v4h14v-4c0-.55.45-1 1-1s1 .45 1 1v5z"/>
-            </svg>
             <h1 className="logo-font text-4xl font-bold text-white drop-shadow-md">ModerneMeuble</h1>
           </div>
         </div>
 
         <div className="w-full md:w-1/2 p-8">
-          <div className="text-center mb-8 md:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" className="text-white">
-              <path fill="currentColor" d="M20 9V7c0-1.65-1.35-3-3-3H7C5.35 4 4 5.35 4 7v2c-1.65 0-3 1.35-3 3v5c0 1.65 1.35 3 3 3v1c0 .55.45 1 1 1s1-.45 1-1v-1h12v1c0 .55.45 1 1 1s1-.45 1-1v-1c1.65 0 3-1.35 3-3v-5c0-1.65-1.35-3-3-3zM6 7c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v2.78c-.61.55-1 1.34-1 2.22v2H7v-2c0-.88-.39-1.67-1-2.22V7zm15 10c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-5c0-.55.45-1 1-1s1 .45 1 1v4h14v-4c0-.55.45-1 1-1s1 .45 1 1v5z"/>
-            </svg>
-            <h1 className="logo-font text-3xl font-bold text-gray-800">ModerneMeuble</h1>
-          </div>
-
           <h2 className="text-2xl font-semibold text-gray-800 mb-1">Bienvenue</h2>
           <p className="text-gray-600 mb-6">Connectez-vous à votre espace client</p>
 
@@ -123,6 +141,8 @@ export default function LoginPage() {
                 className="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isPending}
+                required
               />
             </div>
             <div>
@@ -134,45 +154,34 @@ export default function LoginPage() {
                 className="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isPending}
+                required
               />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Se souvenir de moi</label>
-              </div>
-              <Link href="/auth/forgot-password" className="text-sm text-green-800 hover:underline">Mot de passe oublié ?</Link>
-            </div>
-            <div className="space-y-4">
-              {error && (
-                <div className="animate-fade-in">
-                  <div
-                    className="flex items-start p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-200"
-                    role="alert"
-                  >
-                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                    <div className="ml-3 text-sm font-medium">
-                      {error}
-                    </div>
-                  </div>
+
+            {error && (
+              <div className="animate-fade-in">
+                <div className="flex items-start p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-200" role="alert">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div className="ml-3 text-sm font-medium">{error}</div>
                 </div>
-              )}
-              <SubmitButton pending={isPending} />
-            </div>
+              </div>
+            )}
+
+            <SubmitButton pending={isPending} />
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-600">
             Pas encore membre ?
-            <Link href="../../auth/singup" className="font-medium text-green-700 hover:underline ml-1">Créez un compte</Link>
+            <Link href="/auth/signup" className="font-medium text-green-700 hover:underline ml-1">
+              Créez un compte
+            </Link>
           </p>
         </div>
       </div>
     </section>
   );
 }
+
