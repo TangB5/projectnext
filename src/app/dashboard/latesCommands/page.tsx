@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import 'primeicons/primeicons.css'; 
-import { useSession } from '../../lib/authProvider';
+import { useAuth } from '../../lib/authProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type OrderItem = {
@@ -47,7 +47,7 @@ const statusIcons = {
 };
 
 export default function LatestCommands() {
-  const { session, loading: sessionLoading } = useSession();
+  const { session, loading: sessionLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
