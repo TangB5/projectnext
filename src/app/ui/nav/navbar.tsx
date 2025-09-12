@@ -48,10 +48,7 @@ export function Navbar() {
 
   const handleLogoutCancel = () => setShowLogoutModal(false);
 
-  const handleExploreCatalog = () => {
-    setShowLogoutModal(false);
-    router.push("/products");
-  };
+  
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -237,49 +234,40 @@ export function Navbar() {
       <AnimatePresence>
         {showLogoutModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", damping: 20 }}
-              className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 mx-2"
-            >
-              <div className="flex items-start">
-                <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mr-4">
-                  <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Oh là là, vous nous quittez déjà ?</h3>
-                  <p className="text-gray-600 mb-4">
-                    Avez-vous eu le temps de visiter notre nouveau catalogue ? Nous avons ajouté des pièces exclusives qui pourraient vous plaire !
-                  </p>
+<motion.div
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ opacity: 1, scale: 1 }}
+  exit={{ opacity: 0, scale: 0.95 }}
+  transition={{ type: "tween", duration: 0.2 }}
+  className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 mx-2"
+>
+  <div className="flex flex-col items-center text-center">
+    <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+      <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+    </div>
+    <h3 className="text-xl font-bold text-gray-900 mb-2">Déconnexion</h3>
+    <p className="text-gray-600 mb-6">
+      Êtes-vous sûr de vouloir vous déconnecter ?
+    </p>
 
-                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={handleExploreCatalog}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
-                    >
-                      <i className="pi pi-eye"></i>
-                      Voir le catalogue
-                    </button>
-                    <button
-                      onClick={handleLogoutCancel}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                    >
-                      Rester connecté
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleLogoutConfirm}
-                    className="mt-3 w-full text-center text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    Non merci, je veux vraiment me déconnecter
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+    <div className="flex gap-3 w-full">
+      <button
+        onClick={handleLogoutCancel}
+        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+      >
+        Annuler
+      </button>
+      <button
+        onClick={handleLogoutConfirm}
+        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+      >
+        Se déconnecter
+      </button>
+    </div>
+  </div>
+</motion.div>
           </div>
         )}
       </AnimatePresence>

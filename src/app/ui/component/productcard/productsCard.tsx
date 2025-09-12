@@ -9,7 +9,7 @@ import LoginModal from "../modals/LoginModal";
 import ConfirmOrderModal from "../modals/ConfirmOrderModal";
 import SuccessModal from "../modals/SuccessModal";
 import ErrorModal from "../modals/ErrorModal";
-import useAuth  from "@/app/hooks/useAuth";
+import {useAuth}  from "@/app/lib/authProvider";
 import { useApi } from "@/app/hooks/useApi";
 import { productsReducer, initialState } from "./productsReducer";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import toast from "react-hot-toast";
 
 export default function ProductsCards() {
   const [state, dispatch] = useReducer(productsReducer, initialState);
-  const {  isAuthenticated, loading } = useAuth(); // ✅ hook auth
+  const {  isAuthenticated, loading } = useAuth(); 
   const { fetchProducts, createOrder } = useApi();
   const { toggleProductLike } = useProductApi();
   const [likedProducts, setLikedProducts] = useState<string[]>([]);

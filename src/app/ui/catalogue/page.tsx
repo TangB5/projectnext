@@ -8,7 +8,7 @@ import { Product, OrderItem } from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProductApi } from '@/app/hooks/useProductApi';
 import { useApi } from "@/app/hooks/useApi";
-import  useAuth  from "@/app/hooks/useAuth";
+import  {useAuth}  from "@/app/lib/authProvider";
 import ProductCard from '../component/productcard/productCard';
 import { productsReducer, initialState } from "../component/productcard/productsReducer";
 import LoginModal from "../component/modals/LoginModal";
@@ -251,15 +251,15 @@ export default function Catalogue() {
   
 
   return (
-    <section className="py-12 bg-gradient-to-b from-emerald-50 to-white min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 bg-gradient-to-b from-emerald-50 to-white min-h-screen md:pt-40 pt-20">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* En-tête */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6"
         >
-          <div className="flex items-center gap-4">
+          <div className="w-full justify-center flex items-center gap-4">
             <motion.button
               onClick={goToHome}
               whileHover={{ x: -3 }}
@@ -269,7 +269,7 @@ export default function Catalogue() {
               <span className="text-lg font-medium">Accueil</span>
             </motion.button>
             <div className="h-6 w-px bg-gray-300"></div>
-            <h1 className="text-4xl font-bold text-emerald-900 font-serif">
+            <h1 className="md:text-4xl font-bold text-emerald-900 font-serif text-xl">
               Catalogue complet
             </h1>
           </div>

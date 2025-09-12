@@ -4,30 +4,28 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import useAuth from '@/app/hooks/useAuth';
+import { useAuth } from "@/app/lib/authProvider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const { isAuthenticated, loading, refreshSession,session } = useAuth();
+  const { isAuthenticated, loading, refreshSession, session } = useAuth();
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
-
- useEffect(() => {
-  if (!loading && isAuthenticated) {
-    if (session?.user?.roles?.includes('admin')) {
-      router.push('/dashboard');
-    } else {
-      router.push('/');
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      if (session?.user?.roles?.includes('admin')) {
+        router.push('/dashboard');
+      } else {
+        router.push('/');
+      }
     }
-  }
-}, [isAuthenticated, loading, session, router]);
-
+  }, [isAuthenticated, loading, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,9 +58,12 @@ export default function LoginPage() {
 
       toast.success('Connexion réussie !');
       await refreshSession();
-      router.refresh();
-      router.push('/');
 
+      if (data.user?.roles?.includes('admin')) {
+        router.push('/dashboard'); 
+      } else {
+        router.push('/'); 
+      }
     } catch (err) {
       console.error('Erreur lors du login :', err);
       setError('Une erreur est survenue.');
@@ -159,16 +160,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && (
-              <div className="animate-fade-in">
-                <div className="flex items-start p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-200" role="alert">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <div className="ml-3 text-sm font-medium">{error}</div>
-                </div>
-              </div>
-            )}
+            
 
             <SubmitButton pending={isPending} />
           </form>
@@ -184,4 +176,3 @@ export default function LoginPage() {
     </section>
   );
 }
-
