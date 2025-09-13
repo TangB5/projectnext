@@ -41,7 +41,7 @@ export default function SalesDashboard() {
   
 
 const [currency, setCurrency] = useState<Currency>("FCFA");
-  const API_BASE_URL = process.env.BACKEND_URL || "http://localhost:3000";
+  const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
   const formatCurrency = (value: number) => {
     switch(currency) {
@@ -56,15 +56,13 @@ const [currency, setCurrency] = useState<Currency>("FCFA");
     const fetchOrders = async () => {
     try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/api/orders`);
+        const res = await fetch(`${API_BASE_URL}api/orders`);
         if (!res.ok) {
             throw new Error("Failed to fetch orders");
         }
 
-        // C'est l'étape clé : déstructurez la réponse pour obtenir le tableau 'orders' et le 'total'.
         const { orders }: { orders: Order[], total: number } = await res.json();
 
-        // Calculer les ventes pour cette année et l'année précédente
         const currentDate = new Date();
         const salesMap: Record<string, SaleData> = {};
 
@@ -75,7 +73,6 @@ const [currency, setCurrency] = useState<Currency>("FCFA");
             return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         }).reverse();
 
-        // Initialiser la structure de données
         months.forEach(month => {
             salesMap[month] = {
                 month: month.split('-')[1],
@@ -98,13 +95,9 @@ const [currency, setCurrency] = useState<Currency>("FCFA");
 
             // Calculer les ventes pour l'année précédente
             const previousYearMonth = `${year - 1}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-            // Supposons que votre API renvoie également des commandes de l'année précédente
-            // Pour cet exemple, nous simulons la logique.
-            // En réalité, vous devriez filtrer les commandes de l'année précédente
-            // dans une requête API distincte ou une logique de filtrage plus avancée.
+            
             if (salesMap[previousYearMonth]) {
-                // salesMap[previousYearMonth].previousYearSales += order.total; // Ceci est la logique.
-                // Pour l'instant, nous laissons à 0 car votre API ne les fournit pas encore séparément.
+               
             }
         });
 

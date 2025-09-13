@@ -1,5 +1,4 @@
 'use server'
-import { z } from "zod";
 import { deleteSession, getSession } from "../lib/session";
 import { Product, Commande, ProductData, OrderItem } from "../types";
 import { revalidatePath } from "next/cache";
@@ -8,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 
 // ---------- Produits ----------
 export const createProduct = async (productData: ProductData): Promise<Product> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/createProduct`, {
+  const response = await fetch(`${API_BASE_URL}api/auth/createProduct`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(productData),
@@ -22,13 +21,13 @@ export const createProduct = async (productData: ProductData): Promise<Product> 
 };
 
 export const getProducts = async (): Promise<Product[]> => {
-  const response = await fetch(`${API_BASE_URL}/api/products`);
+  const response = await fetch(`${API_BASE_URL}api/products`);
   if (!response.ok) throw new Error('Erreur lors du chargement des produits');
   return await response.json();
 };
 
 export const deleteProduit = async (id: string): Promise<unknown> => {
-  const response = await fetch(`${API_BASE_URL}/api/product/${id}`, { method: 'DELETE' });
+  const response = await fetch(`${API_BASE_URL}api/product/${id}`, { method: 'DELETE' });
   if (!response.ok) throw new Error('Échec de la suppression');
   revalidatePath('/dashboard/products');
   return await response.json();
@@ -38,7 +37,7 @@ export const updateProduit = async (
   id: string,
   productData: Omit<Product, "_id" | "createdAt">
 ): Promise<Product> => {
-  const response = await fetch(`${API_BASE_URL}/api/product/${id}`, {
+  const response = await fetch(`${API_BASE_URL}api/product/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(productData),
@@ -55,39 +54,6 @@ export const updateProduit = async (
 
 //login
 
-export async function login(data: { email: string; password: string }) {
-  const { email, password } = data;
-
-  // validation
-  const loginSchema = z.object({
-    email: z.string().email().trim(),
-    password: z.string().min(8).trim(),
-  });
-
-  const result = loginSchema.safeParse({ email, password });
-  if (!result.success) {
-    return { errors: result.error.flatten().fieldErrors };
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      const { message } = await res.json();
-      return { errors: { email: [message || "Email ou mot de passe incorrect."] } };
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { errors: { email: ["Erreur serveur."] } };
-  }
-}
 
 
 export async function logout() {
@@ -164,7 +130,7 @@ export async function getMyCommandes(): Promise<Commande[]> {
   const session = await getSession();
   if (!session?.userId) throw new Error("Non autorisé");
 
-  const response = await fetch(`${API_BASE_URL}/api/commandes/user/${session.userId}`, { cache: 'no-store' });
+  const response = await fetch(`${API_BASE_URL}api/commandes/user/${session.userId}`, { cache: 'no-store' });
   if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
   return await response.json();
 }
@@ -173,7 +139,7 @@ export async function getAllCommandes(): Promise<Commande[]> {
   const session = await getSession();
   if (session?.role !== "admin") throw new Error("Accès refusé");
 
-  const response = await fetch(`${API_BASE_URL}/api/commandes`, { cache: 'no-store' });
+  const response = await fetch(`${API_BASE_URL}api/commandes`, { cache: 'no-store' });
   if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
   return await response.json();
 }
@@ -182,7 +148,7 @@ export async function updateCommandeStatus(id: string, status: Commande["status"
   const session = await getSession();
   if (session?.role !== "admin") throw new Error("Accès refusé");
 
-  const response = await fetch(`${API_BASE_URL}/api/commande/${id}`, {
+  const response = await fetch(`${API_BASE_URL}api/commande/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
@@ -196,7 +162,7 @@ export async function deleteCommande(id: string) {
   const session = await getSession();
   if (session?.role !== "admin") throw new Error("Accès refusé");
 
-  const response = await fetch(`${API_BASE_URL}/api/commande/${id}`, { method: 'DELETE' });
+  const response = await fetch(`${API_BASE_URL}api/commande/${id}`, { method: 'DELETE' });
   if (!response.ok) throw new Error("Erreur lors de la suppression");
   revalidatePath('/dashboard/commandes');
   return await response.json();

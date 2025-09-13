@@ -1,7 +1,17 @@
 @import "tailwindcss";
 
         
-      
+@source inline("bg-green-100");
+@source inline("bg-blue-100");
+@source inline("bg-amber-100");
+
+@source inline("text-green-800");
+@source inline("text-blue-800");
+@source inline("text-amber-800");
+
+@source inline("border-green-500");
+@source inline("border-blue-500");
+@source inline("border-amber-500");
         
         .product-card:hover {
             transform: translateY(-5px);
@@ -126,3 +136,4 @@
     transform: translateX(100%);
   }
 }
+

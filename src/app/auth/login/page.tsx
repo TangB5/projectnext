@@ -27,51 +27,54 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, loading, session, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
 
-    if (!email || !password) {
-      setError('Veuillez remplir tous les champs.');
-      toast.error('Veuillez remplir tous les champs.');
+  if (!email || !password) { 
+    setError("Veuillez remplir tous les champs.");
+    toast.error("Veuillez remplir tous les champs.");
+    return;
+  }
+
+  setIsPending(true);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      credentials: "include",
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data?.user) {
+      const message = data?.message || "La connexion a échoué.";
+      setError(message);
+      toast.error(message);
       return;
     }
 
-    setIsPending(true);
+    console.log("Données de l'API login:", data); // Log pour déboguer
+    toast.success("Connexion réussie !");
+    await refreshSession();
 
-    try {
-      const res = await fetch(`${API_BASE_URL}api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok || !data?.user) {
-        const message = data?.message || 'La connexion a échoué.';
-        setError(message);
-        toast.error(message);
-        return;
-      }
-
-      toast.success('Connexion réussie !');
-      await refreshSession();
-
-      if (data.user?.roles?.includes('admin')) {
-        router.push('/dashboard'); 
-      } else {
-        router.push('/'); 
-      }
-    } catch (err) {
-      console.error('Erreur lors du login :', err);
-      setError('Une erreur est survenue.');
-      toast.error('Une erreur est survenue.');
-    } finally {
-      setIsPending(false);
+    // Gérer à la fois `role` et `roles`
+    const userRoles = data.user.roles || (data.user.role ? [data.user.role] : []);
+    if (userRoles.includes("admin")) {
+      router.push("/dashboard");
+    } else {
+      router.push("/");
     }
-  };
+  } catch (err) {
+    console.error("Erreur lors du login:", err);
+    setError("Une erreur est survenue.");
+    toast.error("Une erreur est survenue.");
+  } finally {
+    setIsPending(false);
+  }
+};
 
   function SubmitButton({ pending }: { pending: boolean }) {
     return (
