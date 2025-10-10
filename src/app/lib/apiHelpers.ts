@@ -3,7 +3,7 @@ import { deleteSession, getSession } from "../lib/session";
 import { Product, Commande, ProductData, OrderItem } from "../types";
 import { revalidatePath } from "next/cache";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL 
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
 
 // ---------- Produits ----------
 export const createProduct = async (productData: ProductData): Promise<Product> => {
@@ -78,6 +78,7 @@ export async function register(data: {
   if (!password) errors.password = ['Le mot de passe est requis'];
   if (password !== confirmPassword) errors.confirmPassword = ['Les mots de passe ne correspondent pas'];
 
+  console.log(data);
   if (Object.keys(errors).length > 0) {
     return { success: false, errors };
   }
