@@ -13,11 +13,13 @@ const nextConfig: NextConfig = {
                 hostname: 'images.unsplash.com',
                 pathname: '/**',
             },
+
             {
                 protocol: 'https',
                 hostname: 'memo-backend-sigma.vercel.app',
                 pathname: '/**',
             },
+
             {
                 protocol: 'http',
                 hostname: 'localhost',
@@ -28,13 +30,21 @@ const nextConfig: NextConfig = {
     },
 
     async rewrites() {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-        return [
-            {
-                source: '/api/:path*',
-                destination: `${backendUrl}/api/:path*`,
-            },
-        ];
+        if (process.env.NODE_ENV === 'development') {
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
+
+            console.log(`[Next.js Proxy] Actif : Redirection de /api/* vers ${backendUrl}/api/*`);
+
+            return [
+                {
+                    source: '/api/:path*',
+                    destination: `${backendUrl}/api/:path*`,
+                },
+            ];
+        }
+
+        return [];
     },
 };
 
