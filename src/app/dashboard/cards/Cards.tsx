@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Cards from "@/app/ui/cards/Cards";
 import { getProducts, getAllCommandes } from "@/app/lib/apiHelpers";
-import { Product, Commande } from "@/app/types";
+import { Product, Order } from "@/app/types";
 
 export default function DashboardPage() {
   const [totalVentes, setTotalVentes] = useState<number>(0);
@@ -14,7 +14,7 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const products: Product[] = await getProducts();
-        const commandes: Commande[] = await getAllCommandes();
+        const commandes: Order[] = await getAllCommandes();
 
         setTotalProduits(products.length);
         setTotalCommandes(commandes.length);

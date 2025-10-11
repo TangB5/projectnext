@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../dashboard/pagination/paginatio1";
 import Image from "next/image";
 import { toast } from 'react-toastify';
-import { createProduct, getProducts, deleteProduit, updateProduit } from "@/app/lib/apiHelpers";
+import { createProduct, getProducts, deleteProduct, updateProduct } from "@/app/lib/apiHelpers";
 import { supabase } from "../../lib/supabaseClient";
 import { Product } from "@/app/types";
 
@@ -70,7 +70,7 @@ export default function ProductsManage({
     if (!delet) return;
 
     try {
-      await deleteProduit(delet._id);
+      await deleteProduct(delet._id);
 
       setProducts(prev => prev.filter(p => p._id !== delet._id));
       toast.success("Produit supprimé avec succès !");
@@ -135,7 +135,7 @@ export default function ProductsManage({
         oldPrice: formData.oldPrice !== 0 ? formData.oldPrice : update.oldPrice,
       };
 
-      const updated = await updateProduit(update._id, updatedProductData);
+      const updated = await updateProduct(update._id, updatedProductData);
 
       toast.success("Produit mis à jour avec succès !");
       setShowUpdateModal(false);

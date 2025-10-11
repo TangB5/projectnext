@@ -35,39 +35,58 @@ export interface ProductData {
 export interface User {
   _id: string;
   email: string;
+  name:string;
   password: string;
   role: string;
 }
 
-export interface Commande {
-  _id: string;
-  userId: string;
-  products: { productId: string; quantity: number }[];
-  total: number;
-  status: 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
-  createdAt: string;
-}
+
+
+// src/app/types/order.ts
 
 export interface OrderItem {
-  productId: string;
-  quantity: number;
-  price: number;
+    productId: string;
+    quantity: number;
+    price: number;
 }
 
+export interface Order {
+    _id: string;
+    userId: User; // populate possible
+    items: OrderItem[];
+    totalAmount: number;
+    status: 'En attente' | 'En traitement' | 'Expédiée' | 'Annulée';
+    createdAt: string;
+    paymentMethod?: string;
+    details?: {
+        address?: string;
+        trackingNumber?: string;
+        estimatedDelivery?: string;
+    };
+}
+
+// Pour les requêtes de création de commande côté frontend
 export interface OrderRequest {
-  products: OrderItem[];
+    userId: string;
+    items: OrderItem[];
+    paymentMethod?: string;
+    details?: {
+        address?: string;
+        trackingNumber?: string;
+        estimatedDelivery?: string;
+    };
 }
 
 export interface Customer {
-  id: string; // Utilisez string pour correspondre aux identifiants du backend
-  name: string;
-  email: string;
-  phone: string;
-  orders: number;
-  totalSpent: number;
-  lastOrder: string;
+    id: string;
+    name: string;
+    email: string;
+    roles?: string[];
+    phone?: string;
+    orders?: number;
+    totalSpent?: number;
+    lastOrder?: string;
 }
-
 export interface CustomerManageProps {
   activeTab: string;
 }

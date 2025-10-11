@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
-import { logout as logoutHelper } from "@/app/lib/apiHelpers";
+// src/app/api/auth/logout/route.ts
+import { deleteSession } from "@/app/lib/session.server";
 
 export async function POST() {
-  const result = await logoutHelper();
-  return NextResponse.json(result);
+    return deleteSession();
 }

@@ -23,31 +23,27 @@ const nextConfig: NextConfig = {
             {
                 protocol: 'http',
                 hostname: 'localhost',
-                port: '5000', // Assurez-vous que c'est le bon port du backend
+                port: '5000',
                 pathname: '/**',
             },
         ],
     },
 
     async rewrites() {
-        // 🚨 CORRECTION CRUCIALE : Appliquer le proxy uniquement en environnement local
         if (process.env.NODE_ENV === 'development') {
             const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
-            // Assurez-vous que backendUrl est bien l'URL locale pour le proxy
-            // Nous utilisons ici directement la variable pour la flexibilité si elle est définie localement
 
             console.log(`[Next.js Proxy] Actif : Redirection de /api/* vers ${backendUrl}/api/*`);
 
             return [
                 {
                     source: '/api/:path*',
-                    destination: `${backendUrl}/api/:path*`, // Utilise l'URL locale (e.g., http://localhost:5000)
+                    destination: `${backendUrl}/api/:path*`,
                 },
             ];
         }
 
-        // En production ou autres environnements, aucune réécriture n'est nécessaire
         return [];
     },
 };

@@ -1,133 +1,217 @@
-'use server'
+// src/app/lib/apiHelpers.client.ts
+import { Product, Order, ProductData, OrderItem } from "../types";
 
-import { deleteSession, getSession } from "./session";
-import { Product, Commande, ProductData, OrderItem } from "../types";
-import { revalidatePath } from "next/cache";
+const API_BASE_URL = "";
 
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
-
-// NOTE: Le code pour 'registerAction' et 'register' a été retiré de ce fichier
-// et déplacé dans des fichiers appropriés pour le client-side.
-
-const isAdmin = async () => {
-    const session = await getSession();
+export async function isAdminClient(): Promise<boolean> {
+    const res = await fetch("/api/auth/session", { cache: "no-store" });
+    if (!res.ok) return false;
+    const session = await res.json();
     return session?.user?.roles?.includes("admin") ?? false;
-};
+}
 
+// ---------- PRODUITS ----------
+export async function getProducts(): Promise<Product[]> {
+    const res = await fetch(`${API_BASE_URL}/api/products`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Erreur chargement produits");
+    return res.json();
+}
 
-// ---------- Produits ----------
-export const createProduct = async (productData: ProductData): Promise<Product> => {
-    if (!await isAdmin()) throw new Error("Accès refusé. Rôle administrateur requis.");
-
-
-    const response = await fetch(`${API_BASE_URL}/api/products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
+export async function createProduct(data: ProductData): Promise<Product> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+    const res = await fetch(`${API_BASE_URL}/api/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
     });
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la création du produit');
-    }
-    revalidatePath('/dashboard/products');
-    return await response.json();
-};
+    if (!res.ok) throw new Error("Erreur création produit");
+    return res.json();
+}
 
-export const getProducts = async (): Promise<Product[]> => {
-    // Cette fonction n'a pas besoin de vérification de session si elle est publique.
-    const response = await fetch(`${API_BASE_URL}/api/products`);
-    if (!response.ok) throw new Error('Erreur lors du chargement des produits');
-    return await response.json();
-};
-
-export const deleteProduit = async (id: string): Promise<unknown> => {
-    if (!await isAdmin()) throw new Error("Accès refusé. Rôle administrateur requis.");
-
-    const response = await fetch(`${API_BASE_URL}/api/product/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error('Échec de la suppression');
-    revalidatePath('/dashboard/products');
-    return await response.json();
-};
-
-export const updateProduit = async (
-    id: string,
-    productData: Omit<Product, "_id" | "createdAt">
-): Promise<Product> => {
-    if (!await isAdmin()) throw new Error("Accès refusé. Rôle administrateur requis.");
-
-    const response = await fetch(`${API_BASE_URL}/api/product/${id}`, {
+export async function updateProduct(id: string, data: Partial<Product>): Promise<Product> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+    const res = await fetch(`${API_BASE_URL}/api/product/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(productData),
+        body: JSON.stringify(data),
     });
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de la mise à jour du produit");
+    if (!res.ok) throw new Error("Erreur mise à jour produit");
+    return res.json();
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+    const res = await fetch(`${API_BASE_URL}/api/product/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Erreur suppression produit");
+}
+
+// ---------- COMMANDES ADMIN ----------
+export async function getAllOrders(page = 1, limit = 10): Promise<{ orders: Order[], total: number }> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+
+    const res = await fetch(`/api/orders?page=${page}&limit=${limit}`, { cache: "no-store" });
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur chargement commandes");
     }
-    revalidatePath('/dashboard/products');
-    return await response.json();
-};
-
-// ---------- Auth (uniquement logout) ----------
-
-export async function logout() {
-    await deleteSession();
-    return { success: true };
+    return res.json(); // { orders, total }
 }
 
+export async function updateOrderStatus(id: string, status: Order["status"]): Promise<Order> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
 
-// ---------- Commandes ----------
-export async function createCommande(userId: string, items: OrderItem[]) {
-    // Ceci devrait probablement devenir un Server Action ou être géré dans une API route.
-    // Laisse la logique fetch ici pour l'instant.
-    const response = await fetch(`${API_BASE_URL}/api/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, items }),
-    });
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la création de la commande');
-    }
-    return await response.json();
-}
-
-export async function getMyCommandes(): Promise<Commande[]> {
-    const session = await getSession();
-    if (!session?.user?.id) throw new Error("Non autorisé");
-
-    const response = await fetch(`${API_BASE_URL}/api/commandes/user/${session.user.id}`, { cache: 'no-store' });
-    if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
-    return await response.json();
-}
-
-export async function getAllCommandes(): Promise<Commande[]> {
-    if (!await isAdmin()) throw new Error("Accès refusé");
-
-    const response = await fetch(`${API_BASE_URL}/api/commandes`, { cache: 'no-store' });
-    if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
-    return await response.json();
-}
-
-export async function updateCommandeStatus(id: string, status: Commande["status"]) {
-    if (!await isAdmin()) throw new Error("Accès refusé");
-
-    const response = await fetch(`${API_BASE_URL}/api/commande/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
     });
-    if (!response.ok) throw new Error("Erreur lors de la mise à jour");
-    revalidatePath('/dashboard/commandes');
-    return await response.json();
+
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur mise à jour commande");
+    }
+    return res.json();
 }
 
-export async function deleteCommande(id: string) {
-    if (!await isAdmin()) throw new Error("Accès refusé");
+export async function deleteOrder(id: string): Promise<void> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
 
-    const response = await fetch(`${API_BASE_URL}/api/commande/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error("Erreur lors de la suppression");
-    revalidatePath('/dashboard/commandes');
-    return await response.json();
+    const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur suppression commande");
+    }
+}
+
+// ---------- COMMANDES UTILISATEUR ----------
+export async function createOrder(userId: string, items: OrderItem[], paymentMethod?: string, details?: object): Promise<Order> {
+    const res = await fetch(`/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, items, paymentMethod, details }),
+    });
+
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur création commande");
+    }
+    return res.json();
+}
+
+export async function getMyOrders(): Promise<Order[]> {
+    const resSession = await fetch("/api/auth/session", { cache: "no-store" });
+    if (!resSession.ok) throw new Error("Erreur session");
+
+    const session = await resSession.json();
+    if (!session?.user?.id) throw new Error("Non autorisé");
+
+    const res = await fetch(`/api/orders/user/${session.user.id}`, { cache: "no-store" });
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur chargement commandes");
+    }
+
+    return res.json();
+}
+
+// ---------- UTILISATEUR / CUSTOMER ----------
+
+// Récupérer les infos de l'utilisateur connecté
+export async function getCurrentUser(): Promise<{ id: string; name: string; email: string; roles?: string[] } | null> {
+    const res = await fetch("/api/auth/session", { cache: "no-store" });
+    if (!res.ok) return null;
+
+    const session = await res.json();
+    if (!session?.user) return null;
+
+    return {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        roles: session.user.roles ?? [],
+    };
+}
+
+
+
+
+// Récupérer tous les utilisateurs (admin only)
+export async function getAllUsers(): Promise<{ id: string; name: string; email: string; roles?: string[] }[]> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+
+    const res = await fetch(`/api/users`, { cache: "no-store" });
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur chargement utilisateurs");
+    }
+
+    return res.json();
+}
+
+export async function getOrdersByCustomer(): Promise<Order[]> {
+    const user = await getCurrentUser();
+    if (!user?.id) throw new Error("Non autorisé");
+
+    const res = await fetch(`/api/orders/user/${user.id}`, { cache: "no-store" });
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Erreur chargement commandes");
+    }
+
+    return res.json();
+}
+
+// Créer un utilisateur (admin only)
+export async function createUser(data: { name: string; email: string; password: string; role?: string }): Promise<{ id: string; name: string; email: string; roles?: string[] }> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+
+    const res = await fetch(`/api/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erreur création utilisateur");
+    }
+
+    return res.json();
+}
+
+// Mettre à jour un utilisateur (admin only)
+export async function updateUser(id: string, data: Partial<{ name: string; email: string; password: string; role?: string }>): Promise<{ id: string; name: string; email: string; roles?: string[] }> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+
+    const res = await fetch(`/api/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erreur mise à jour utilisateur");
+    }
+
+    return res.json();
+}
+
+// Supprimer un utilisateur (admin only)
+export async function deleteUser(id: string): Promise<void> {
+    if (!(await isAdminClient())) throw new Error("Accès refusé");
+
+    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erreur suppression utilisateur");
+    }
+}
+
+
+// ---------- AUTH ----------
+export async function logout() {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    return { success: true };
 }

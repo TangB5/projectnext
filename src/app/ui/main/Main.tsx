@@ -7,8 +7,8 @@ import ProductsManage from "../productManage/ProductManage";
 import OderaManage from "../odersManage/OrdersManage";
 import Setting from "../setting/seting";
 import CustomerManage from "@/app/ui/customer/CustomerManage";
-import { getProducts, getAllCommandes } from "@/app/lib/apiHelpers";
-import { Product, Commande } from "@/app/types";
+import { getProducts, getAllOrders } from "@/app/lib/apiHelpers";
+import { Product, Order } from "@/app/types";
 
 
 import Cards from "../cards/Cards";
@@ -21,29 +21,32 @@ interface MainProps {
 }
 
 export default function Main({ activeTab, showProductModal, setShowProductModal }: MainProps) {
-      const [totalVentes, setTotalVentes] = useState<number>(0);
-      const [totalCommandes, setTotalCommandes] = useState<number>(0);
-      const [totalProduits, setTotalProduits] = useState<number>(0);
+    const [totalVentes, setTotalVentes] = useState<number>(0);
+    const [totalCommandes, setTotalCommandes] = useState<number>(0);
+    const [totalProduits, setTotalProduits] = useState<number>(0);
 
-      useEffect(() => {
-          async function fetchData() {
+    useEffect(() => {
+        async function fetchData() {
             try {
-              const products: Product[] = await getProducts();
-              const commandes: Commande[] = await getAllCommandes();
-      
-              setTotalProduits(products.length);
-              setTotalCommandes(commandes.length);
-      
-              const ventes = commandes.reduce((sum, c) => sum + Number(c.total || 0), 0);
-              setTotalVentes(ventes);
-      
+                const products: Product[] = await getProducts();
+                const { orders }: { orders: Order[]; total: number } = await getAllOrders();
+
+                // Comptes simples
+                setTotalProduits(products.length);
+                setTotalCommandes(orders.length);
+
+                const ventes = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+                setTotalVentes(ventes);
+
             } catch (err) {
-              console.error(err);
+                console.error("Erreur lors du chargement des données :", err);
             }
-          }
+        }
+
+        fetchData();
+    }, []);
       
-          fetchData();
-        }, []);
+
     return (
         <main className="p-6">
             {/* Dashboard Home */}

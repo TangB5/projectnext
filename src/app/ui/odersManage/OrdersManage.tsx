@@ -2,44 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getAllOrders } from '@/app/lib/apiHelpers';
+import {Order} from "@/app/types"
 
-// Mettre à jour les interfaces pour correspondre aux données du backend
-interface User {
-    name: string;
-    email: string;
-}
 
-interface Item {
-    productId: {
-        name: string;
-        price: number;
-    };
-    quantity: number;
-}
-
-interface Order {
-    _id: string;
-    userId: User; // Le champ customer est maintenant userId, et c'est un objet
-    createdAt: string; // Utiliser createdAt pour la date
-    totalAmount: number; // Le montant total
-    status: 'livré' | 'expédié' | 'en cours' | 'en attente' | 'annulé';
-    items: Item[]; // Le tableau des produits
-    paymentMethod: string; // Méthode de paiement
-    details?: {
-        address: string;
-        trackingNumber?: string;
-        estimatedDelivery?: string;
-    };
-}
 
 function useMobileView(breakpoint = 768) {
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        const checkScreenSize = () => {
-            setIsMobile(window.innerWidth < breakpoint);
-        };
-
+        const checkScreenSize = () => setIsMobile(window.innerWidth < breakpoint);
         checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
         return () => window.removeEventListener('resize', checkScreenSize);
@@ -61,68 +33,57 @@ export default function OrdersManage({ activeTab }: { activeTab: string }) {
     const ordersPerPage = 10;
 
     useEffect(() => {
-        if (activeTab === 'orders-management') {
-            const fetchOrders = async () => {
-                setLoading(true);
-                setError(null);
-                try {
-                    const response = await fetch(`/api/orders?page=${currentPage}&limit=${ordersPerPage}`);
-                    if (!response.ok) {
-                        throw new Error('La récupération des commandes a échoué.');
-                    }
-                    const data = await response.json();
-                    setOrders(data.orders);
-                    setTotalOrders(data.total);
-                } catch (err: unknown) {
-                    if (err instanceof Error) {
-                    setError(err.message);
-                    }else {
-                        setError(String(err));
-                    }
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchOrders();
-        }
-    }, [activeTab, currentPage, ordersPerPage]);
+        if (activeTab !== 'orders-management') return;
+
+        const fetchOrders = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const data = await getAllOrders(currentPage, ordersPerPage);
+                setOrders(data.orders); // <-- directement compatible avec Order[]
+                setTotalOrders(data.total);
+            } catch (err: unknown) {
+                if (err instanceof Error) setError(err.message);
+                else setError(String(err));
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOrders();
+    }, [activeTab, currentPage]);
 
     const totalPages = Math.ceil(totalOrders / ordersPerPage);
 
     const filteredOrders = orders.filter(order => {
-        const matchesSearch = order.userId && order.userId.name && order.userId.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = order.userId.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
         return matchesSearch && matchesStatus;
     });
 
     const getStatusConfig = (status: string) => {
         const config = {
-            'livré': { color: 'bg-green-100 text-green-800', icon: 'pi pi-check-circle' },
-            'expédié': { color: 'bg-blue-100 text-blue-800', icon: 'pi pi-truck' },
-            'en cours': { color: 'bg-yellow-100 text-yellow-800', icon: 'pi pi-clock' },
-            'en attente': { color: 'bg-gray-100 text-gray-800', icon: 'pi pi-hourglass' },
-            'annulé': { color: 'bg-red-100 text-red-800', icon: 'pi pi-times-circle' }
+            'En attente': { color: 'bg-gray-100 text-gray-800', icon: 'pi pi-hourglass' },
+            'En traitement': { color: 'bg-yellow-100 text-yellow-800', icon: 'pi pi-clock' },
+            'Expédiée': { color: 'bg-blue-100 text-blue-800', icon: 'pi pi-truck' },
+            'Annulée': { color: 'bg-red-100 text-red-800', icon: 'pi pi-times-circle' },
         };
-        return config[status as keyof typeof config] || config['en attente'];
+        return config[status as keyof typeof config] || config['En attente'];
     };
 
-    if (activeTab !== 'orders-management') {
-        return null;
-    }
+    if (activeTab !== 'orders-management') return null;
 
     return (
-        <div id="orders-management" className={`${activeTab === 'orders-management' ? 'block' : 'hidden'}`}>
+        <div id="orders-management">
+            {/* --- Header / Search / Filter --- */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h3 className="text-xl font-bold text-gray-900 flex items-center">
                         <i className="pi pi-shopping-cart mr-2 text-blue-600"></i>
                         Gestion des commandes
                     </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                        {totalOrders} commande(s) au total
-                    </p>
+                    <p className="text-sm text-gray-500 mt-1">{totalOrders} commande(s) au total</p>
                 </div>
-                
                 <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-grow">
                         <i className="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -131,19 +92,14 @@ export default function OrdersManage({ activeTab }: { activeTab: string }) {
                             placeholder="Rechercher par client..."
                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
                             value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                            }}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    
                     <div className="relative">
                         <select
                             className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                             value={selectedStatus}
-                            onChange={(e) => {
-                                setSelectedStatus(e.target.value);
-                            }}
+                            onChange={(e) => setSelectedStatus(e.target.value)}
                         >
                             <option value="all">Tous les statuts</option>
                             <option value="en attente">En attente</option>
@@ -157,6 +113,7 @@ export default function OrdersManage({ activeTab }: { activeTab: string }) {
                 </div>
             </div>
 
+            {/* --- Orders Table / Mobile View --- */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 {loading ? (
                     <div className="flex justify-center items-center h-48">
@@ -175,7 +132,7 @@ export default function OrdersManage({ activeTab }: { activeTab: string }) {
                         <p className="text-blue-700 font-medium">Aucune commande trouvée</p>
                         <p className="text-sm text-blue-600 mt-1">Essayez de modifier vos critères de recherche</p>
                     </div>
-                ) : (
+                ): (
                     <>
                         {isMobile ? (
                             <div className="space-y-3">
@@ -208,7 +165,7 @@ export default function OrdersManage({ activeTab }: { activeTab: string }) {
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">Montant</p>
-                                                <p className="font-medium">{order.totalAmount} €</p>
+                                                <p className="font-medium">{order.totalAmount}fcfa</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">Paiement</p>
