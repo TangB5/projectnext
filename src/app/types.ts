@@ -33,12 +33,13 @@ export interface ProductData {
 }
 
 export interface User {
-  _id: string;
-  email: string;
-  name:string;
-  password: string;
-  role: string;
+    _id: string;
+    name: string;
+    email: string;
+    password?: string; // ✅ devient optionnel
+    roles?: string[];
 }
+
 
 
 
@@ -69,6 +70,7 @@ export interface Order {
 export interface OrderRequest {
     userId: string;
     items: OrderItem[];
+    totalAmount: number;
     paymentMethod?: string;
     details?: {
         address?: string;

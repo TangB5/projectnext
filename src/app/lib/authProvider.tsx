@@ -9,6 +9,8 @@ import {
     useCallback,
 } from 'react';
 
+import { User } from "@/app/types";
+
 export interface Session {
     user: {
         id: string;
@@ -19,6 +21,7 @@ export interface Session {
 }
 
 interface AuthContextType {
+    user: User | null; // ✅ accès direct à l’utilisateur
     session: Session | null;
     isAuthenticated: boolean;
     loading: boolean;
@@ -31,7 +34,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
-    const isAuthenticated = !!session;
+
+    const isAuthenticated = !!session?.user;
+    const user: User | null = session
+        ? {
+            _id: session.user.id,
+            name: session.user.name,
+            email: session.user.email,
+            roles: session.user.roles ?? [],
+        }
+        : null;
 
     const fetchSession = useCallback(async () => {
         setLoading(true);
@@ -44,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setSession(null);
             }
         } catch (err) {
-            console.error("Erreur récupération session :", err);
+            console.error("❌ Erreur récupération session :", err);
             setSession(null);
         } finally {
             setLoading(false);
@@ -55,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             await fetch("/api/auth/logout", { method: "POST" });
         } catch (err) {
-            console.error("Erreur logout :", err);
+            console.error("❌ Erreur logout :", err);
         } finally {
             setSession(null);
         }
@@ -66,7 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [fetchSession]);
 
     return (
-        <AuthContext.Provider value={{ session, isAuthenticated, loading, refreshSession: fetchSession, logout }}>
+        <AuthContext.Provider
+            value={{
+                user,             // ✅ ajouté
+                session,
+                isAuthenticated,
+                loading,
+                refreshSession: fetchSession,
+                logout,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );
