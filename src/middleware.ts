@@ -56,6 +56,15 @@ export default async function middleware(req: NextRequest) {
     const adminRoutes = ["/admin"];
     const authRoutes = ["/auth/login", "/auth/signup"];
 
+
+
+    // 🚨 AJOUTEZ CETTE LIGNE POUR DÉBOGUER
+    if (session) {
+        console.log("Session décodée - Rôles :", session.roles);
+    }
+
+    // 🚨 AJOUTEZ CETTE LIGNE POUR DÉBOGUER
+    console.log("isAdmin déterminé à :", isAdmin);
     // --------------------------------------------------------
     // 1. UTILISATEUR DÉJÀ CONNECTÉ QUI VA VERS /auth/*
     // --------------------------------------------------------
