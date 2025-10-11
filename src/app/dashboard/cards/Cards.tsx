@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Cards from "@/app/ui/cards/Cards";
-import { getProducts, getAllCommandes } from "@/app/lib/apiHelpers";
+import { getProducts, getAllOrders } from "@/app/lib/apiHelpers";
 import { Product, Order } from "@/app/types";
 
 export default function DashboardPage() {
@@ -10,27 +10,28 @@ export default function DashboardPage() {
   const [totalCommandes, setTotalCommandes] = useState<number>(0);
   const [totalProduits, setTotalProduits] = useState<number>(0);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const products: Product[] = await getProducts();
-        const commandes: Order[] = await getAllCommandes();
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const products: Product[] = await getProducts();
+                const data = await getAllOrders(); // { orders: Order[], total: number }
+                const commandes: Order[] = data.orders;
 
-        setTotalProduits(products.length);
-        setTotalCommandes(commandes.length);
+                setTotalProduits(products.length);
+                setTotalCommandes(commandes.length);
 
-        const ventes = commandes.reduce((sum, c) => sum + Number(c.total || 0), 0);
-        setTotalVentes(ventes);
+                const ventes = commandes.reduce((sum, c) => sum + Number(c.totalAmount || 0), 0);
+                setTotalVentes(ventes);
 
-      } catch (err) {
-        console.error(err);
-      }
-    }
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
-    fetchData();
-  }, []);
+        fetchData();
+    }, []);
 
-  return (
+    return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Cards
         bgcolor="green-100"

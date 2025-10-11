@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback,useReducer } from 'react';
 import toast from 'react-hot-toast';
 import { Frown, Smile, Home, Filter, Loader2, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Product, OrderItem } from "@/app/types";
+import {Product, OrderRequest} from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProductApi } from '@/app/hooks/useProductApi';
 import { useApi } from "@/app/hooks/useApi";
@@ -90,11 +90,12 @@ export default function Catalogue() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [activeFilter, setActiveFilter] = useState('Tous');
   const { fetchProducts, createOrder } = useApi();
-  const {  isAuthenticated, loading } = useAuth();  
-  
+  const {  isAuthenticated, loading,session } = useAuth();
+  const user = session?.user;
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [address, setAddress] = useState('');
 
   const {  toggleProductLike } = useProductApi();
   
@@ -216,30 +217,40 @@ export default function Catalogue() {
 }, [isAuthenticated]);
 
 
-  const confirmOrder = async () => {
-      if (!state.selectedProduct) return;
-      
-      dispatch({ type: 'ORDER_REQUEST' });
-      
-      try {
-        const orderItem: OrderItem = {
-          productId: state.selectedProduct._id,
-          quantity: state.quantity,
-          price: state.selectedProduct.price
-        };
-        
-        await createOrder([orderItem]);
-        
-        dispatch({ 
-          type: 'ORDER_SUCCESS', 
-          payload: `Votre commande de ${state.quantity} x ${state.selectedProduct.name} a été enregistrée 🎉`
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Erreur lors de la commande';
-        dispatch({ type: 'ORDER_FAILURE', payload: message });
-      }
+    // Confirmation de commande (avec adresse obligatoire)
+    const confirmOrder = async () => {
+        if (!state.selectedProduct || !user) return;
+
+        dispatch({ type: "ORDER_REQUEST" });
+
+        try {
+            const orderRequest: OrderRequest = {
+                userId: user.id,
+                items: [
+                    {
+                        productId: state.selectedProduct._id,
+                        quantity: state.quantity,
+                        price: state.selectedProduct.price,
+                    },
+                ],
+                totalAmount: state.selectedProduct.price * state.quantity,
+                details: {
+                    address: address.trim(),
+                },
+            };
+
+            await createOrder(orderRequest);
+
+            dispatch({
+                type: "ORDER_SUCCESS",
+                payload: `Votre commande de ${state.quantity} x ${state.selectedProduct.name} a été enregistrée !`,
+            });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Erreur lors de la commande";
+            dispatch({ type: "ORDER_FAILURE", payload: message });
+        }
     };
-  
+
 
   const categories = ['Tous', 'Salon', 'Cuisine', 'Chambre', 'Bureau', 'Extérieur'];
   const handleCloseLoginModal = () => dispatch({ type: 'HIDE_LOGIN_MODAL' });
@@ -401,15 +412,17 @@ export default function Catalogue() {
             ))}
             {/* Modals */}
             <LoginModal isOpen={state.showLoginModal} product={state.selectedProduct} onClose={handleCloseLoginModal} />
-            <ConfirmOrderModal
-                      isOpen={state.showConfirmModal}
-                      product={state.selectedProduct}
-                      quantity={state.quantity}
-                      onQuantityChange={handleQuantityChange}
-                      onClose={handleCloseConfirmModal}
-                      onConfirm={confirmOrder}
-                      isOrdering={state.isOrdering}
-                    />
+              <ConfirmOrderModal
+                  isOpen={state.showConfirmModal}
+                  product={state.selectedProduct}
+                  quantity={state.quantity}
+                  onQuantityChange={handleQuantityChange}
+                  onClose={handleCloseConfirmModal}
+                  onConfirm={confirmOrder}
+                  isOrdering={state.isOrdering}
+                  address={address}
+                  onAddressChange={setAddress}
+              />
             <SuccessModal isOpen={state.showSuccessModal} message={state.successMessage} onClose={handleCloseSuccessModal} />
             <ErrorModal isOpen={state.showErrorModal} message={state.errorMessage} onClose={handleCloseErrorModal} />
 
