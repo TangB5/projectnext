@@ -14,7 +14,7 @@ export default function LoginPage() {
     const { loading } = useAuth();
 
 
-    const API_BASE_URL = '';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +30,7 @@ export default function LoginPage() {
 
         try {
 
-            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            const res = await fetch(`${API_BASE_URL}api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),

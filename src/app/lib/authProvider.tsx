@@ -34,7 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
-
+    const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
     const isAuthenticated = !!session?.user;
     const user: User | null = session
         ? {
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchSession = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/auth/session", { cache: "no-store" });
+            const res = await fetch(`${API_BASE_URL}api/auth/session`, { cache: "no-store" });
             if (res.ok) {
                 const data: Session | null = await res.json();
                 setSession(data);

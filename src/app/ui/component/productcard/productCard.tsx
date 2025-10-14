@@ -61,8 +61,8 @@ export default function ProductCard({
               <Image
                 src={product.image}
                 alt={product.name}
-                width={500}
-                height={320}
+                width={1080}
+                height={768}
                 className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${imageLoading ? "blur-md" : "blur-0"}`}
                 onLoad={() => setImageLoading(false)}
               />
