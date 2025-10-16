@@ -48,7 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchSession = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}api/auth/session`, { cache: "no-store" });
+            const res = await fetch(`${API_BASE_URL}api/auth/session`, {
+                cache: "no-store",
+                credentials: "include"
+            });
             if (res.ok) {
                 const data: Session | null = await res.json();
                 setSession(data);

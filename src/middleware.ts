@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-// 🚨 Utilisation de 'jose' pour la compatibilité avec l'Edge Runtime de Next.js
 import { jwtVerify, JWTPayload } from 'jose';
 
 // --- Interface pour le Payload JWT ---
@@ -8,13 +7,13 @@ interface CustomJWTPayload extends JWTPayload {
     _id: string;
     email: string;
     name: string;
-    roles: string[]; // Doit être un tableau
+    roles: string[];
 }
 
 // --- Fonction de Vérification JWT ---
 
 async function verifyJWT(token: string): Promise<CustomJWTPayload | null> {
-    // 🚨 Le secret doit être une chaîne non vide.
+
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
         console.error("JWT_SECRET n'est pas défini. La vérification est impossible.");
@@ -22,21 +21,21 @@ async function verifyJWT(token: string): Promise<CustomJWTPayload | null> {
     }
 
     try {
-        // Le secret doit être converti en Uint8Array pour 'jose'
+
         const secret = new TextEncoder().encode(secretKey);
 
         const { payload } = await jwtVerify(token, secret, {
-            // Vous pouvez spécifier l'algorithme ici si vous le connaissez (ex: 'HS256')
+
         });
 
-        // Vérification de la présence des champs essentiels
+
         if (payload && payload._id && Array.isArray(payload.roles)) {
             return payload as CustomJWTPayload;
         }
 
         return null;
     } catch (error) {
-        // Si le token est invalide ou expiré, jose lance une erreur.
+
         console.error("ERREUR DE VÉRIFICATION JWT:", (error as Error).message);
         return null;
     }
@@ -55,7 +54,7 @@ export default async function middleware(req: NextRequest) {
     const protectedRoutes = ["/dashboard"];
     const adminRoutes = ["/admin"];
     const authRoutes = ["/auth/login", "/auth/signup"];
-
+    console.log(token);
 
     // --------------------------------------------------------
     // 1. UTILISATEUR DÉJÀ CONNECTÉ QUI VA VERS /auth/*
