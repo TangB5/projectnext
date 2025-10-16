@@ -1,4 +1,3 @@
-// src/lib/session.server.ts
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
@@ -22,7 +21,6 @@ export interface Session {
     };
 }
 
-// Récupère la session côté serveur
 export async function getSession(): Promise<Session | null> {
     const cookieStore = await cookies();
     const token = cookieStore.get("authToken")?.value;
@@ -52,20 +50,21 @@ export async function getSession(): Promise<Session | null> {
                 roles,
             },
         };
-    } catch {
+    } catch (err) {
+        console.error("JWT invalide ou expiré:", err);
         return null;
     }
 }
 
 export function deleteSession(): NextResponse {
-    const response = NextResponse.json({ ok: true });
+    const response = NextResponse.json({ ok: true, message: "Déconnexion réussie" });
     response.cookies.set({
         name: "authToken",
         value: "",
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 0,
     });
     return response;

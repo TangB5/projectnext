@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, JWTPayload } from 'jose';
 
 // --- Interface pour le Payload JWT ---
-
 interface CustomJWTPayload extends JWTPayload {
     _id: string;
     email: string;
@@ -11,9 +10,7 @@ interface CustomJWTPayload extends JWTPayload {
 }
 
 // --- Fonction de Vérification JWT ---
-
 async function verifyJWT(token: string): Promise<CustomJWTPayload | null> {
-
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
         console.error("JWT_SECRET n'est pas défini. La vérification est impossible.");
@@ -21,84 +18,66 @@ async function verifyJWT(token: string): Promise<CustomJWTPayload | null> {
     }
 
     try {
-
         const secret = new TextEncoder().encode(secretKey);
-
-        const { payload } = await jwtVerify(token, secret, {
-
-        });
-
-
+        const { payload } = await jwtVerify(token, secret);
         if (payload && payload._id && Array.isArray(payload.roles)) {
             return payload as CustomJWTPayload;
         }
-
         return null;
     } catch (error) {
-
         console.error("ERREUR DE VÉRIFICATION JWT:", (error as Error).message);
         return null;
     }
 }
 
-// --- Fonction Middleware Principale ---
-
+// --- Middleware principal ---
 export default async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
     console.log("Middleware appelé pour:", path);
 
-    const token = req.cookies.get("authToken")?.value;
+    // ✅ Lecture du cookie authToken côté Next.js
+    const token = req.cookies.get("authToken")?.value || null;
     const session = token ? await verifyJWT(token) : null;
-    const isAdmin = session?.roles?.includes("admin") || false; // Assure une valeur booléenne
+    const isAdmin = session?.roles?.includes("admin") || false;
 
     const protectedRoutes = ["/dashboard"];
     const adminRoutes = ["/admin"];
     const authRoutes = ["/auth/login", "/auth/signup"];
-    console.log(token);
 
-    // --------------------------------------------------------
-    // 1. UTILISATEUR DÉJÀ CONNECTÉ QUI VA VERS /auth/*
-    // --------------------------------------------------------
+    console.log("Token JWT:", token);
+    console.log("Raw cookies header:", req.headers.get("cookie"));
+
+
     if (authRoutes.includes(path) && session) {
         const redirect_destination = isAdmin ? "/dashboard" : "/";
-
         console.log(`Utilisateur connecté. Redirection vers ${redirect_destination} depuis: ${path}`);
         return NextResponse.redirect(new URL(redirect_destination, req.url));
     }
 
-    // --------------------------------------------------------
-    // 2. UTILISATEUR NON-ADMIN QUI TENTE D'ACCÉDER AU DASHBOARD
-    // --------------------------------------------------------
-    // L'utilisateur est connecté (session existe), mais n'est pas admin, et essaie d'accéder à /dashboard.
+    // 2️⃣ Utilisateur non-admin qui tente d'accéder à /dashboard
     if (protectedRoutes.some((r) => path.startsWith(r)) && session && !isAdmin) {
         console.log("Accès non-admin au dashboard. Redirection vers / depuis:", path);
         return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // --------------------------------------------------------
-    // 3. UTILISATEUR NON-CONNECTÉ QUI VA VERS /dashboard ou /admin
-    // --------------------------------------------------------
-    // L'utilisateur n'est pas connecté et essaie d'accéder à une route protégée.
+    // 3️⃣ Utilisateur non-connecté qui tente d'accéder à /dashboard ou /admin
     if ((protectedRoutes.some((r) => path.startsWith(r)) || adminRoutes.some((r) => path.startsWith(r))) && !session) {
         console.log("Accès protégé requis. Redirection vers /auth/login depuis:", path);
         return NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
-    // --------------------------------------------------------
-    // 4. UTILISATEUR SANS RÔLE ADMIN QUI VA VERS /admin
-    // --------------------------------------------------------
-    // L'utilisateur est connecté, mais n'est pas admin, et essaie d'accéder à /admin.
+    // 4️⃣ Utilisateur connecté sans rôle admin qui tente d'accéder à /admin
     if (adminRoutes.some((r) => path.startsWith(r)) && !isAdmin) {
         console.log("Accès Admin requis ou rôle insuffisant. Redirection vers / depuis:", path);
         return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // Laisse passer l'utilisateur
+    // ✅ Laisse passer l'utilisateur
     return NextResponse.next();
 }
 
+// --- Config du matcher ---
 export const config = {
-    // Le matcher doit couvrir toutes les routes d'authentification et les routes protégées
     matcher: [
         "/dashboard/:path*",
         "/admin/:path*",

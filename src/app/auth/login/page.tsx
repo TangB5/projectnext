@@ -34,22 +34,28 @@ export default function LoginPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
-                credentials: "include",
             });
 
             const data = await res.json().catch(() => null);
 
-            if (!res.ok || !data?.user) {
+            if (!res.ok || !data?.user || !data?.token) {
                 const message = data?.message || "La connexion a échoué.";
                 setError(message);
                 toast.error(message);
                 return;
             }
 
-            console.log("Connexion réussie. Le backend a envoyé le Set-Cookie. Forçage de la navigation.");
+
+            await fetch("/api/auth/set-cookies", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: data.token }),
+            });
+
+            console.log("Connexion réussie, cookie frontend posé.");
             toast.success("Connexion réussie !");
 
-            // La redirection forcée qui envoie la requête avec le cookie fraîchement appliqué
+
             window.location.href = '/dashboard';
 
         } catch (err) {

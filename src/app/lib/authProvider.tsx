@@ -21,7 +21,7 @@ export interface Session {
 }
 
 interface AuthContextType {
-    user: User | null; // ✅ accès direct à l’utilisateur
+    user: User | null;
     session: Session | null;
     isAuthenticated: boolean;
     loading: boolean;
@@ -34,8 +34,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
-    const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
     const isAuthenticated = !!session?.user;
+
     const user: User | null = session
         ? {
             _id: session.user.id,
@@ -45,13 +47,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         : null;
 
+    // ---------------------------------------------
+    // Récupération de la session via le cookie frontend
+    // ---------------------------------------------
     const fetchSession = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}api/auth/session`, {
+            const res = await fetch("/api/auth/session", {
                 cache: "no-store",
-                credentials: "include"
+                credentials: "include",
             });
+
             if (res.ok) {
                 const data: Session | null = await res.json();
                 setSession(data);
@@ -66,6 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    // ---------------------------------------------
+    // Déconnexion : supprime le cookie côté frontend
+    // ---------------------------------------------
     const logout = useCallback(async () => {
         try {
             await fetch("/api/auth/logout", { method: "POST" });
@@ -83,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <AuthContext.Provider
             value={{
-                user,             // ✅ ajouté
+                user,
                 session,
                 isAuthenticated,
                 loading,
