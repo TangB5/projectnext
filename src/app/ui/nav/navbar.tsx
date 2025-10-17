@@ -6,6 +6,21 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useAuth } from "@/app/lib/authProvider";
+import {
+    FaUser,
+    FaShoppingCart,
+    FaBoxOpen,
+    FaSignOutAlt,
+    FaBars,
+    FaTimes,
+    FaChevronDown,
+    FaHome,
+    FaInfoCircle,
+    FaEnvelope,
+    FaStore,
+    FaShieldAlt,
+
+} from 'react-icons/fa';
 
 // Accès à la variable d'environnement au niveau du module
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -17,6 +32,7 @@ export function Navbar() {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [cartCount, setCartCount] = useState(0);
+    const [, setIsHoveringProfile] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
     const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -39,16 +55,19 @@ export function Navbar() {
     }, []);
 
     // -----------------------------
-    // Scroll effect
+    // Scroll effect amélioré
     // -----------------------------
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 10);
-        window.addEventListener("scroll", handleScroll);
+        const handleScroll = () => {
+            const scrollY = window.scrollY;
+            setScrolled(scrollY > 10);
+        };
+        window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     // -----------------------------
-    // Panier dynamique (Correction des dépendances)
+    // Panier dynamique
     // -----------------------------
     useEffect(() => {
         if (!isAuthenticated || !API_BASE_URL) {
@@ -58,8 +77,10 @@ export function Navbar() {
 
         const fetchCartCount = async () => {
             try {
-                // Utilisation de API_BASE_URL
-                const res = await fetch(`${API_BASE_URL}api/orders/cart/count`, { credentials: "include" });
+                const res = await fetch(`${API_BASE_URL}api/orders/cart/count`, {
+                    credentials: "include",
+                    cache: 'no-cache'
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setCartCount(data.count || 0);
@@ -70,15 +91,18 @@ export function Navbar() {
         };
 
         fetchCartCount();
-    }, [isAuthenticated, API_BASE_URL]); // Correction : API_BASE_URL ajouté
+
+        // Polling pour les mises à jour en temps réel
+        const interval = setInterval(fetchCartCount, 30000);
+        return () => clearInterval(interval);
+    }, [isAuthenticated]);
 
     // -----------------------------
-    // Gestion du scroll (Correction de la navigation/scroll)
+    // Gestion du scroll
     // -----------------------------
     const handleSmoothScroll = (e: MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
 
-        // Si on est sur la page d'accueil, on scroll
         if (pathname === "/") {
             const element = document.getElementById(targetId);
             if (element) {
@@ -86,7 +110,6 @@ export function Navbar() {
                 setIsOpen(false);
             }
         } else {
-            // Sinon, on navigue vers l'accueil avec le hash
             router.push(`/#${targetId}`);
             setIsOpen(false);
         }
@@ -114,7 +137,6 @@ export function Navbar() {
         }
     }, [pathname]);
 
-    // Les handlers étaient déjà là, je les conserve (ils sont corrects)
     const handleLogoutClick = () => {
         setShowProfileMenu(false);
         setShowLogoutModal(true);
@@ -134,104 +156,261 @@ export function Navbar() {
 
     const handleLogoutCancel = () => setShowLogoutModal(false);
 
+    const NavLink = ({ href, children, icon, targetId }: {
+        href: string;
+        children: React.ReactNode;
+        icon?: React.ReactNode;
+        targetId?: string;
+    }) => (
+        <a
+            href={href}
+            onClick={(e) => targetId && handleSmoothScroll(e, targetId)}
+            className="flex items-center gap-2 text-white hover:text-emerald-200 font-medium transition-all duration-200 px-3 py-2 rounded-lg hover:bg-white/10"
+        >
+            {icon}
+            {children}
+        </a>
+    );
+
     return (
         <>
-            <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? "py-2 bg-green-900 shadow-xl" : "py-3 bg-green-800"}`}>
+            <nav className={`fixed w-full z-50 transition-all duration-500 ${
+                scrolled
+                    ? "py-2 bg-gradient-to-r from-green-900 to-emerald-900 shadow-2xl backdrop-blur-sm bg-opacity-95"
+                    : "py-4 bg-gradient-to-r from-green-800 to-emerald-800"
+            }`}>
                 <div className="container mx-auto px-4 flex justify-between items-center">
-                    {/* Logo */}
-                    <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
-                        <span className="text-xl font-bold text-white">ModerneMeuble</span>
-                    </div>
+                    {/* Logo amélioré */}
+                    <motion.div
+                        className="flex items-center space-x-3 cursor-pointer group"
+                        onClick={() => router.push("/")}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                            <FaHome className="text-emerald-600 text-xl" />
+                        </div>
+                        <div>
+            <span className="text-xl font-bold text-white bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
+                ModerneMeuble
+            </span>
+                            <p className="text-xs text-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                Excellence depuis 2024
+                            </p>
+                        </div>
+                    </motion.div>
 
-                    {/* Desktop menu */}
-                    <div className="hidden md:flex items-center space-x-8">
-                        {/* ... (Liens de navigation) ... */}
-                        <a href="#products" onClick={(e) => handleSmoothScroll(e, "products")} className="text-white hover:text-stone-200 font-medium">Nos Produits</a>
-                        <a href="#about" onClick={(e) => handleSmoothScroll(e, "about")} className="text-white hover:text-stone-200 font-medium">À Propos</a>
-                        <a href="#contact" onClick={(e) => handleSmoothScroll(e, "contact")} className="text-white hover:text-stone-200 font-medium">Contact</a>
+                    {/* Desktop menu amélioré */}
+                    <div className="hidden lg:flex items-center space-x-1">
+                        <NavLink href="#products" targetId="products" icon={<FaStore className="text-sm" />}>
+                            Nos Produits
+                        </NavLink>
+                        <NavLink href="#about" targetId="about" icon={<FaInfoCircle className="text-sm" />}>
+                            À Propos
+                        </NavLink>
+                        <NavLink href="#contact" targetId="contact" icon={<FaEnvelope className="text-sm" />}>
+                            Contact
+                        </NavLink>
 
                         {loading ? (
-                            <div className="w-24 h-8 bg-gray-600 rounded-lg animate-pulse" />
+                            <div className="w-32 h-10 bg-emerald-700 rounded-xl animate-pulse" />
                         ) : isAuthenticated ? (
                             <div className="relative" ref={profileMenuRef}>
-                                {/* Profil avec badge panier */}
-                                <button
+                                {/* Bouton profil avec animations */}
+                                <motion.button
                                     onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                    className="text-white hover:text-stone-200 flex items-center gap-2 relative"
+                                    onMouseEnter={() => setIsHoveringProfile(true)}
+                                    onMouseLeave={() => setIsHoveringProfile(false)}
+                                    className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 border border-white/20"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
-                                    <i className="pi pi-user text-xl" />
-                                    {session?.user?.name || "Mon Profil"}
-                                    {cartCount > 0 && (
-                                        <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
-                                            {cartCount}
-                                        </span>
-                                    )}
-                                </button>
+                                    <div className="relative">
+                                        <FaUser className="text-lg" />
+                                        {cartCount > 0 && (
+                                            <motion.span
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg"
+                                            >
+                                                {cartCount}
+                                            </motion.span>
+                                        )}
+                                    </div>
+                                    <span className="font-medium max-w-32 truncate">
+                                        {session?.user?.name || "Mon Profil"}
+                                    </span>
+                                    <motion.div
+                                        animate={{ rotate: showProfileMenu ? 180 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <FaChevronDown className="text-sm" />
+                                    </motion.div>
+                                </motion.button>
 
+                                {/* Menu dropdown profil */}
                                 <AnimatePresence>
                                     {showProfileMenu && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: -10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="absolute top-10 right-0 bg-white rounded-lg shadow-lg py-2 w-48 text-gray-800 z-10"
+                                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            transition={{ duration: 0.2, ease: "easeOut" }}
+                                            className="absolute top-14 right-0 bg-white rounded-2xl shadow-2xl py-3 w-64 border border-gray-100 z-50"
                                         >
-                                            <button onClick={() => router.push("/ui/MyProfile")} className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center">Mon profil</button>
-                                            <button onClick={() => router.push("/ui/myOrders")} className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center">Mes commandes</button>
-                                            <hr className="my-1 border-gray-200" />
-                                            {/* Appel de handleLogoutClick pour afficher le modal */}
-                                            <button onClick={handleLogoutClick} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 flex items-center">
-                                                Déconnexion
-                                            </button>
+                                            {/* En-tête du profil */}
+                                            <div className="px-4 py-3 border-b border-gray-100">
+                                                <p className="font-semibold text-gray-900 truncate">
+                                                    {session?.user?.name || "Utilisateur"}
+                                                </p>
+                                                <p className="text-sm text-gray-600 truncate">
+                                                    {session?.user?.email}
+                                                </p>
+                                            </div>
+
+                                            {/* Options du menu */}
+                                            <div className="py-2">
+                                                <motion.button
+                                                    whileHover={{ x: 4 }}
+                                                    onClick={() => { router.push("/ui/MyProfile"); setShowProfileMenu(false); }}
+                                                    className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                                                >
+                                                    <FaUser className="text-emerald-600" />
+                                                    <span>Mon profil</span>
+                                                </motion.button>
+
+                                                <motion.button
+                                                    whileHover={{ x: 4 }}
+                                                    onClick={() => { router.push("/ui/myOrders"); setShowProfileMenu(false); }}
+                                                    className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                                                >
+                                                    <FaBoxOpen className="text-blue-600" />
+                                                    <span>Mes commandes</span>
+                                                </motion.button>
+
+                                                <motion.button
+                                                    whileHover={{ x: 4 }}
+                                                    onClick={() => { router.push("/cart"); setShowProfileMenu(false); }}
+                                                    className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                                                >
+                                                    <div className="relative">
+                                                        <FaShoppingCart className="text-purple-600" />
+                                                        {cartCount > 0 && (
+                                                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                                                {cartCount}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span>Panier ({cartCount})</span>
+                                                </motion.button>
+                                            </div>
+
+                                            <div className="border-t border-gray-100 pt-2">
+                                                <motion.button
+                                                    whileHover={{ x: 4 }}
+                                                    onClick={handleLogoutClick}
+                                                    className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 transition-colors"
+                                                >
+                                                    <FaSignOutAlt />
+                                                    <span>Déconnexion</span>
+                                                </motion.button>
+                                            </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
                             </div>
                         ) : (
-                            <button
+                            <motion.button
                                 onClick={() => router.push("/auth/login")}
-                                className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium"
+                                className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                                whileHover={{ scale: 1.05, y: -1 }}
+                                whileTap={{ scale: 0.95 }}
                             >
+                                <FaShieldAlt />
                                 Espace Pro
-                            </button>
+                            </motion.button>
                         )}
                     </div>
 
-                    {/* Mobile menu (Rendu du logout dans le menu mobile) */}
-                    <div className="md:hidden">
-                        <button onClick={() => setIsOpen(!isOpen)} className="text-white focus:outline-none">
-                            <i className={`pi ${isOpen ? "pi-times" : "pi-bars"} text-2xl`}></i>
-                        </button>
+                    {/* Mobile menu amélioré */}
+                    <div className="lg:hidden">
+                        <motion.button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="text-white focus:outline-none w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            {isOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+                        </motion.button>
+
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute top-full left-0 w-full bg-green-800 z-40 overflow-hidden"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    className="absolute top-full left-0 w-full bg-gradient-to-b from-emerald-900 to-green-900 shadow-2xl z-40 overflow-hidden"
                                 >
-                                    <div className="flex flex-col p-4 space-y-2">
-                                        <a href="#products" onClick={(e) => { handleSmoothScroll(e, "products"); }} className="text-white hover:text-stone-200 font-medium">Nos Produits</a>
-                                        <a href="#about" onClick={(e) => { handleSmoothScroll(e, "about"); }} className="text-white hover:text-stone-200 font-medium">À Propos</a>
-                                        <a href="#contact" onClick={(e) => { handleSmoothScroll(e, "contact"); }} className="text-white hover:text-stone-200 font-medium">Contact</a>
+                                    <div className="flex flex-col p-6 space-y-4">
+                                        <NavLink href="#products" targetId="products" icon={<FaStore />}>
+                                            Nos Produits
+                                        </NavLink>
+                                        <NavLink href="#about" targetId="about" icon={<FaInfoCircle />}>
+                                            À Propos
+                                        </NavLink>
+                                        <NavLink href="#contact" targetId="contact" icon={<FaEnvelope />}>
+                                            Contact
+                                        </NavLink>
 
                                         {isAuthenticated ? (
                                             <>
-                                                <button onClick={() => { router.push("/cart"); setIsOpen(false); }} className="text-white flex items-center gap-2">
-                                                    Panier ({cartCount})
-                                                </button>
-                                                <button onClick={() => { router.push("/profile"); setIsOpen(false); }} className="text-white flex items-center gap-2">
-                                                    Mon Profil
-                                                </button>
-                                                {/* Appel de handleLogoutClick pour afficher le modal, et fermer le menu mobile */}
-                                                <button onClick={() => { handleLogoutClick(); setIsOpen(false); }} className="text-red-400 flex items-center gap-2">
+                                                <div className="border-t border-emerald-600 pt-4 mt-2">
+                                                    <p className="text-emerald-200 text-sm font-medium px-3 mb-2">
+                                                        Mon compte
+                                                    </p>
+                                                    <button
+                                                        onClick={() => { router.push("/ui/MyProfile"); setIsOpen(false); }}
+                                                        className="flex items-center gap-3 w-full px-3 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                                    >
+                                                        <FaUser />
+                                                        Mon Profil
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { router.push("/ui/myOrders"); setIsOpen(false); }}
+                                                        className="flex items-center gap-3 w-full px-3 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                                    >
+                                                        <FaBoxOpen />
+                                                        Mes Commandes
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { router.push("/cart"); setIsOpen(false); }}
+                                                        className="flex items-center gap-3 w-full px-3 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                                    >
+                                                        <div className="relative">
+                                                            <FaShoppingCart />
+                                                            {cartCount > 0 && (
+                                                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                                                    {cartCount}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        Panier ({cartCount})
+                                                    </button>
+                                                </div>
+                                                <button
+                                                    onClick={() => { handleLogoutClick(); setIsOpen(false); }}
+                                                    className="flex items-center gap-3 w-full px-3 py-3 text-red-300 hover:bg-red-500/20 rounded-lg transition-colors mt-4 border border-red-500/30"
+                                                >
+                                                    <FaSignOutAlt />
                                                     Déconnexion
                                                 </button>
                                             </>
                                         ) : (
-                                            <button onClick={() => { router.push("/auth/login"); setIsOpen(false); }} className="bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-center">
+                                            <button
+                                                onClick={() => { router.push("/auth/login"); setIsOpen(false); }}
+                                                className="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-4 py-3 rounded-lg font-semibold text-center mt-4 flex items-center justify-center gap-2"
+                                            >
+                                                <FaShieldAlt />
                                                 Espace Pro
                                             </button>
                                         )}
@@ -243,9 +422,10 @@ export function Navbar() {
                 </div>
             </nav>
 
-            {/* ----------------------------- */}
-            {/* Rendu du Modal de Déconnexion */}
-            {/* ----------------------------- */}
+            {/* Espace pour le contenu sous la navbar fixe */}
+            <div className={`transition-all duration-300 ${scrolled ? "h-16" : "h-20"}`} />
+
+            {/* Modal de déconnexion */}
             <AnimatePresence>
                 {showLogoutModal && (
                     <LogoutConfirmModal

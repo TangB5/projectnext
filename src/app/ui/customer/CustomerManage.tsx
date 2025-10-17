@@ -19,8 +19,7 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
 
 // ---------- HANDLERS ----------
 
-// Création d’un nouveau client
-// Création d’un nouveau client via le formulaire
+
 
 // Mise à jour d’un client existant
     const handleUpdateCustomer = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -67,8 +66,6 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
         }
     };
 
-
-
     useEffect(() => {
         if (activeTab !== 'customers-management') return;
 
@@ -76,18 +73,18 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
             setLoading(true);
             setError(null);
             try {
-                const users = await getAllUsers(); // retourne tous les utilisateurs
+                const users = await getAllUsers();
 
-                // Ne garder que les users normaux (role "customer")
-                const normalUsers = users.filter(customer => user.roles?.includes("user"));
 
-                // Transforme en Customer
+                const normalUsers = users.filter(customer => customer.roles?.includes("user"));
+
+
                 const customers: Customer[] = normalUsers.map(customer => ({
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
+                    id: customer.id,
+                    name: customer.name,
+                    email: customer.email,
                     phone: '—',
-                    orders: 0,
+                    orders: 0, // Ces valeurs sont des placeholders, à remplir si possible
                     totalSpent: 0,
                     lastOrder: '—',
                 }));
@@ -447,6 +444,7 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Nom complet</label>
                                     <input
                                         type="text"
+                                        name="name"
                                         required
                                         defaultValue={selectedCustomer.name}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"

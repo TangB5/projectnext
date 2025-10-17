@@ -95,7 +95,9 @@ export default function Catalogue() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const {  toggleProductLike } = useProductApi();
   
@@ -206,26 +208,35 @@ export default function Catalogue() {
   const goToHome = () => {
     router.push('/');
   };
-   const handleOrder = useCallback((product: Product) => {
-  dispatch({ type: 'SELECT_PRODUCT', payload: product });
-  
-  if (!isAuthenticated) {
-    dispatch({ type: 'SHOW_LOGIN_MODAL' });
-  } else {
-    dispatch({ type: 'SHOW_CONFIRM_MODAL' });
-  }
-}, [isAuthenticated]);
+    const handleOrder = useCallback(
+        (product: Product) => {
+            dispatch({ type: "SELECT_PRODUCT", payload: product });
+            if (!isAuthenticated) {
+                dispatch({ type: "SHOW_LOGIN_MODAL" });
+            } else {
+                dispatch({ type: "SHOW_CONFIRM_MODAL" });
+            }
+        },
+        [isAuthenticated]
+    );
 
-
-    // Confirmation de commande (avec adresse obligatoire)
-    const confirmOrder = async () => {
+    // Confirmation de commande
+    const confirmOrder = async ({
+                                    address,
+                                    phone,
+                                    paymentMethod,
+                                }: {
+        address: string;
+        phone: string;
+        paymentMethod: string;
+    }) => {
         if (!state.selectedProduct || !user) return;
 
         dispatch({ type: "ORDER_REQUEST" });
 
         try {
             const orderRequest: OrderRequest = {
-                userId: user.id,
+                userId: user?.id ?? "",
                 items: [
                     {
                         productId: state.selectedProduct._id,
@@ -234,8 +245,10 @@ export default function Catalogue() {
                     },
                 ],
                 totalAmount: state.selectedProduct.price * state.quantity,
+                paymentMethod: paymentMethod?.trim() || "non précisé",
                 details: {
-                    address: address.trim(),
+                    address: address?.trim() || "",
+                    phone: phone?.trim() || "",
                 },
             };
 
@@ -245,8 +258,14 @@ export default function Catalogue() {
                 type: "ORDER_SUCCESS",
                 payload: `Votre commande de ${state.quantity} x ${state.selectedProduct.name} a été enregistrée !`,
             });
+
+            // Réinitialise les champs
+            setAddress("");
+            setPhone("");
+            setPaymentMethod("");
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Erreur lors de la commande";
+            const message =
+                err instanceof Error ? err.message : "Erreur lors de la commande";
             dispatch({ type: "ORDER_FAILURE", payload: message });
         }
     };
@@ -422,6 +441,10 @@ export default function Catalogue() {
                   isOrdering={state.isOrdering}
                   address={address}
                   onAddressChange={setAddress}
+                  phone={phone}
+                  onPhoneChange={setPhone}
+                  paymentMethod={paymentMethod}
+                  onPaymentChange={setPaymentMethod}
               />
             <SuccessModal isOpen={state.showSuccessModal} message={state.successMessage} onClose={handleCloseSuccessModal} />
             <ErrorModal isOpen={state.showErrorModal} message={state.errorMessage} onClose={handleCloseErrorModal} />

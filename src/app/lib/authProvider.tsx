@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUserData(null);
             }
         } catch (err) {
-            console.error("❌ Erreur récupération session :", err);
+            console.error(" Erreur récupération session :", err);
             setSession(null);
             setUserData(null);
         } finally {

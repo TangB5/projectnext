@@ -122,7 +122,7 @@ const [currency, setCurrency] = useState<Currency>("FCFA");
 };
 
     fetchOrders();
-  }, [timeRange]);
+  }, [timeRange,API_BASE_URL]);
 
   const renderChart = () => {
     switch(chartType) {

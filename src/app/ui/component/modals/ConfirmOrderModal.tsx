@@ -5,7 +5,6 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
-import { InputNumber } from "primereact/inputnumber";
 import { Badge } from "primereact/badge";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { Product } from "@/app/types";
