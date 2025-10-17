@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, MouseEvent } from "react";
-import { useRouter } from "next/navigation";
+import { LogoutConfirmModal } from "@/app/ui/component/modals/LogoutConfirmModal";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useAuth } from "@/app/lib/authProvider";
+
+// Accès à la variable d'environnement au niveau du module
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export function Navbar() {
     const { session, isAuthenticated, loading, logout } = useAuth();
@@ -14,13 +18,14 @@ export function Navbar() {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [cartCount, setCartCount] = useState(0);
     const router = useRouter();
+    const pathname = usePathname();
     const profileMenuRef = useRef<HTMLDivElement>(null);
-const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
+
     // -----------------------------
-    // Fermer dropdown si click à l'extérieur
+    // Fermer dropdown si clic à l'extérieur
     // -----------------------------
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent | globalThis.MouseEvent) => {
+        const handleClickOutside = (event: globalThis.MouseEvent) => {
             if (
                 profileMenuRef.current &&
                 !profileMenuRef.current.contains(event.target as Node)
@@ -43,16 +48,17 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
     }, []);
 
     // -----------------------------
-    // Panier dynamique (utilise ton contrôleur backend)
+    // Panier dynamique (Correction des dépendances)
     // -----------------------------
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!isAuthenticated || !API_BASE_URL) {
             setCartCount(0);
             return;
         }
 
         const fetchCartCount = async () => {
             try {
+                // Utilisation de API_BASE_URL
                 const res = await fetch(`${API_BASE_URL}api/orders/cart/count`, { credentials: "include" });
                 if (res.ok) {
                     const data = await res.json();
@@ -64,17 +70,51 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
         };
 
         fetchCartCount();
-    }, [isAuthenticated]);
+    }, [isAuthenticated, API_BASE_URL]); // Correction : API_BASE_URL ajouté
 
+    // -----------------------------
+    // Gestion du scroll (Correction de la navigation/scroll)
+    // -----------------------------
     const handleSmoothScroll = (e: MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
-        const element = document.getElementById(targetId);
-        if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Si on est sur la page d'accueil, on scroll
+        if (pathname === "/") {
+            const element = document.getElementById(targetId);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "start" });
+                setIsOpen(false);
+            }
+        } else {
+            // Sinon, on navigue vers l'accueil avec le hash
+            router.push(`/#${targetId}`);
             setIsOpen(false);
         }
     };
 
+    // Effet pour scroller après la navigation vers l'accueil
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hash) {
+            const targetId = window.location.hash.substring(1);
+            const element = document.getElementById(targetId);
+            if (element) {
+                const timer = setTimeout(() => {
+                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+
+                const cleanUrlTimer = setTimeout(() => {
+                    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                }, 500);
+
+                return () => {
+                    clearTimeout(timer);
+                    clearTimeout(cleanUrlTimer);
+                };
+            }
+        }
+    }, [pathname]);
+
+    // Les handlers étaient déjà là, je les conserve (ils sont corrects)
     const handleLogoutClick = () => {
         setShowProfileMenu(false);
         setShowLogoutModal(true);
@@ -105,27 +145,10 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
 
                     {/* Desktop menu */}
                     <div className="hidden md:flex items-center space-x-8">
-                        <a
-                            href="#products"
-                            onClick={(e) => handleSmoothScroll(e, "products")}
-                            className="text-white hover:text-stone-200 font-medium"
-                        >
-                            Nos Produits
-                        </a>
-                        <a
-                            href="#about"
-                            onClick={(e) => handleSmoothScroll(e, "about")}
-                            className="text-white hover:text-stone-200 font-medium"
-                        >
-                            À Propos
-                        </a>
-                        <a
-                            href="#contact"
-                            onClick={(e) => handleSmoothScroll(e, "contact")}
-                            className="text-white hover:text-stone-200 font-medium"
-                        >
-                            Contact
-                        </a>
+                        {/* ... (Liens de navigation) ... */}
+                        <a href="#products" onClick={(e) => handleSmoothScroll(e, "products")} className="text-white hover:text-stone-200 font-medium">Nos Produits</a>
+                        <a href="#about" onClick={(e) => handleSmoothScroll(e, "about")} className="text-white hover:text-stone-200 font-medium">À Propos</a>
+                        <a href="#contact" onClick={(e) => handleSmoothScroll(e, "contact")} className="text-white hover:text-stone-200 font-medium">Contact</a>
 
                         {loading ? (
                             <div className="w-24 h-8 bg-gray-600 rounded-lg animate-pulse" />
@@ -140,8 +163,8 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
                                     {session?.user?.name || "Mon Profil"}
                                     {cartCount > 0 && (
                                         <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
-            {cartCount}
-          </span>
+                                            {cartCount}
+                                        </span>
                                     )}
                                 </button>
 
@@ -154,23 +177,11 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
                                             transition={{ duration: 0.2 }}
                                             className="absolute top-10 right-0 bg-white rounded-lg shadow-lg py-2 w-48 text-gray-800 z-10"
                                         >
-                                            <button
-                                                onClick={() => router.push("/ui/MyProfile")}
-                                                className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center"
-                                            >
-                                                Mon profil
-                                            </button>
-                                            <button
-                                                onClick={() => router.push("/ui/myOrders")}
-                                                className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center"
-                                            >
-                                                Mes commandes
-                                            </button>
+                                            <button onClick={() => router.push("/ui/MyProfile")} className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center">Mon profil</button>
+                                            <button onClick={() => router.push("/ui/myOrders")} className="block w-full px-4 py-2 hover:bg-gray-100 flex items-center">Mes commandes</button>
                                             <hr className="my-1 border-gray-200" />
-                                            <button
-                                                onClick={handleLogoutClick}
-                                                className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 flex items-center"
-                                            >
+                                            {/* Appel de handleLogoutClick pour afficher le modal */}
+                                            <button onClick={handleLogoutClick} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 flex items-center">
                                                 Déconnexion
                                             </button>
                                         </motion.div>
@@ -187,7 +198,7 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
                         )}
                     </div>
 
-                    {/* Mobile menu */}
+                    {/* Mobile menu (Rendu du logout dans le menu mobile) */}
                     <div className="md:hidden">
                         <button onClick={() => setIsOpen(!isOpen)} className="text-white focus:outline-none">
                             <i className={`pi ${isOpen ? "pi-times" : "pi-bars"} text-2xl`}></i>
@@ -202,9 +213,9 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
                                     className="absolute top-full left-0 w-full bg-green-800 z-40 overflow-hidden"
                                 >
                                     <div className="flex flex-col p-4 space-y-2">
-                                        <a href="#products" onClick={(e) => { handleSmoothScroll(e, "products"); setIsOpen(false); }} className="text-white hover:text-stone-200 font-medium">Nos Produits</a>
-                                        <a href="#about" onClick={(e) => { handleSmoothScroll(e, "about"); setIsOpen(false); }} className="text-white hover:text-stone-200 font-medium">À Propos</a>
-                                        <a href="#contact" onClick={(e) => { handleSmoothScroll(e, "contact"); setIsOpen(false); }} className="text-white hover:text-stone-200 font-medium">Contact</a>
+                                        <a href="#products" onClick={(e) => { handleSmoothScroll(e, "products"); }} className="text-white hover:text-stone-200 font-medium">Nos Produits</a>
+                                        <a href="#about" onClick={(e) => { handleSmoothScroll(e, "about"); }} className="text-white hover:text-stone-200 font-medium">À Propos</a>
+                                        <a href="#contact" onClick={(e) => { handleSmoothScroll(e, "contact"); }} className="text-white hover:text-stone-200 font-medium">Contact</a>
 
                                         {isAuthenticated ? (
                                             <>
@@ -214,6 +225,7 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
                                                 <button onClick={() => { router.push("/profile"); setIsOpen(false); }} className="text-white flex items-center gap-2">
                                                     Mon Profil
                                                 </button>
+                                                {/* Appel de handleLogoutClick pour afficher le modal, et fermer le menu mobile */}
                                                 <button onClick={() => { handleLogoutClick(); setIsOpen(false); }} className="text-red-400 flex items-center gap-2">
                                                     Déconnexion
                                                 </button>
@@ -230,6 +242,18 @@ const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
                     </div>
                 </div>
             </nav>
+
+            {/* ----------------------------- */}
+            {/* Rendu du Modal de Déconnexion */}
+            {/* ----------------------------- */}
+            <AnimatePresence>
+                {showLogoutModal && (
+                    <LogoutConfirmModal
+                        onConfirm={handleLogoutConfirm}
+                        onCancel={handleLogoutCancel}
+                    />
+                )}
+            </AnimatePresence>
         </>
     );
 }
