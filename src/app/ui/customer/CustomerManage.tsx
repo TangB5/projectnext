@@ -78,11 +78,11 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
             try {
                 const users = await getAllUsers(); // retourne tous les utilisateurs
 
-                // Ne garder que les users normaux (role "user")
-                const normalUsers = users.filter(user => user.roles?.includes("user"));
+                // Ne garder que les users normaux (role "customer")
+                const normalUsers = users.filter(customer => user.roles?.includes("user"));
 
                 // Transforme en Customer
-                const customers: Customer[] = normalUsers.map(user => ({
+                const customers: Customer[] = normalUsers.map(customer => ({
                     id: user.id,
                     name: user.name,
                     email: user.email,

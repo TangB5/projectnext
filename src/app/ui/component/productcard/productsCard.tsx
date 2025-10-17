@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useCallback, useMemo, useState } from "react";
-import { Product,  OrderRequest } from "@/app/types";
+import { Product, OrderRequest } from "@/app/types";
 import ProductCard from "./productCard";
 import ProductLoading from "./ProductLoading";
 import ProductEmptyState from "./ProductEmptyState";
@@ -22,8 +22,12 @@ export default function ProductsCards() {
     const { user, isAuthenticated, loading } = useAuth();
     const { fetchProducts, createOrder } = useApi();
     const { toggleProductLike } = useProductApi();
+
+    // Nouveaux états pour la commande
     const [likedProducts, setLikedProducts] = useState<string[]>([]);
     const [address, setAddress] = useState("");
+    const [phone, setPhone] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState("");
 
     const memoizedProducts = useMemo(() => state.products, [state.products]);
 
@@ -47,7 +51,7 @@ export default function ProductsCards() {
         initializeData();
     }, [fetchProducts]);
 
-    // Gestion des likes avec icônes
+    // Gestion des likes
     const handleLike = useCallback(
         async (productId: string) => {
             try {
@@ -67,7 +71,11 @@ export default function ProductsCards() {
                         ? "Produit retiré de vos favoris"
                         : "Produit ajouté aux favoris",
                     {
-                        icon: alreadyLiked ? <XCircle className="text-red-500" /> : <Heart className="text-rose-500" />,
+                        icon: alreadyLiked ? (
+                            <XCircle className="text-red-500" />
+                        ) : (
+                            <Heart className="text-rose-500" />
+                        ),
                         style: {
                             borderRadius: "10px",
                             background: "#333",
@@ -96,15 +104,23 @@ export default function ProductsCards() {
         [isAuthenticated]
     );
 
-    // Confirmation de commande (avec adresse obligatoire)
-    const confirmOrder = async () => {
+    // Confirmation de commande
+    const confirmOrder = async ({
+                                    address,
+                                    phone,
+                                    paymentMethod,
+                                }: {
+        address: string;
+        phone: string;
+        paymentMethod: string;
+    }) => {
         if (!state.selectedProduct || !user) return;
 
         dispatch({ type: "ORDER_REQUEST" });
 
         try {
             const orderRequest: OrderRequest = {
-                userId: user._id,
+                userId: user?._id ?? "",
                 items: [
                     {
                         productId: state.selectedProduct._id,
@@ -113,8 +129,10 @@ export default function ProductsCards() {
                     },
                 ],
                 totalAmount: state.selectedProduct.price * state.quantity,
+                paymentMethod: paymentMethod?.trim() || "non précisé",
                 details: {
-                    address: address.trim(), // obligatoire
+                    address: address?.trim() || "",
+                    phone: phone?.trim() || "",
                 },
             };
 
@@ -124,13 +142,19 @@ export default function ProductsCards() {
                 type: "ORDER_SUCCESS",
                 payload: `Votre commande de ${state.quantity} x ${state.selectedProduct.name} a été enregistrée !`,
             });
+
+            // Réinitialise les champs
+            setAddress("");
+            setPhone("");
+            setPaymentMethod("");
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Erreur lors de la commande";
+            const message =
+                err instanceof Error ? err.message : "Erreur lors de la commande";
             dispatch({ type: "ORDER_FAILURE", payload: message });
         }
     };
 
-    // Gestionnaires de modaux
+    // Gestion des modaux
     const handleCloseLoginModal = () => dispatch({ type: "HIDE_LOGIN_MODAL" });
     const handleCloseConfirmModal = () => dispatch({ type: "HIDE_CONFIRM_MODAL" });
     const handleCloseSuccessModal = () => dispatch({ type: "HIDE_SUCCESS_MODAL" });
@@ -250,6 +274,10 @@ export default function ProductsCards() {
                     isOrdering={state.isOrdering}
                     address={address}
                     onAddressChange={setAddress}
+                    phone={phone}
+                    onPhoneChange={setPhone}
+                    paymentMethod={paymentMethod}
+                    onPaymentChange={setPaymentMethod}
                 />
 
                 <SuccessModal

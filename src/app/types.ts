@@ -33,12 +33,31 @@ export interface ProductData {
 }
 
 export interface User {
-    _id: string;
+    _id?: string;
     name: string;
     email: string;
-    password?: string; // ✅ devient optionnel
+    password?: string; // optionnel
     roles?: string[];
+
+
+    phone?: string;
+    avatar?: string;
+    address?: {
+        street?: string;
+        city?: string;
+        postalCode?: string;
+        country?: string;
+    };
+    preferences?: {
+        newsletter?: boolean;
+        smsNotifications?: boolean;
+        emailNotifications?: boolean;
+    };
+    createdAt?: string;
+    orderCount?: number;
+    loyaltyTier?: string;
 }
+
 
 
 
@@ -51,32 +70,31 @@ export interface OrderItem {
     price: number;
 }
 
+export interface OrderDetails {
+    address?: string;
+    phone?: string; // ✅ ajouté
+    trackingNumber?: string;
+    estimatedDelivery?: string;
+}
+
 export interface Order {
     _id: string;
     userId: User; // populate possible
     items: OrderItem[];
     totalAmount: number;
-    status: 'En attente' | 'En traitement' | 'Expédiée' | 'Annulée';
+    status: "En attente" | "En traitement" | "Expédiée" | "Annulée";
     createdAt: string;
     paymentMethod?: string;
-    details?: {
-        address?: string;
-        trackingNumber?: string;
-        estimatedDelivery?: string;
-    };
+    details?: OrderDetails;
 }
 
-// Pour les requêtes de création de commande côté frontend
+
 export interface OrderRequest {
     userId: string;
     items: OrderItem[];
     totalAmount: number;
     paymentMethod?: string;
-    details?: {
-        address?: string;
-        trackingNumber?: string;
-        estimatedDelivery?: string;
-    };
+    details?: OrderDetails;
 }
 
 export interface Customer {
