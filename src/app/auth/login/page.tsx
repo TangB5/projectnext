@@ -33,7 +33,7 @@ export default function LoginPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
-                credentials: "include", // ✅ permet d'inclure les cookies (important)
+                credentials: "include",
             });
 
             const data = await res.json().catch(() => null);
@@ -45,11 +45,9 @@ export default function LoginPage() {
                 return;
             }
 
-            console.log("✅ Connexion réussie, cookie HTTP-only reçu du serveur.");
             toast.success("Connexion réussie !");
 
-            // ⚡ Facultatif : rafraîchir la session via ton AuthProvider
-            // await refreshSession();
+
 
             
             window.location.href = "/dashboard";

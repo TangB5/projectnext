@@ -38,14 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [userData, setUserData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/";
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+    const FRONTEND_BASE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "";
     const isAuthenticated = !!session?.user;
 
-
+    // ----------------------------
+    // 🔁 Récupère la session utilisateur
+    // ----------------------------
     const fetchSession = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch("api/auth/me", {
+            // Toujours utiliser slash initial pour éviter les chemins relatifs incorrects
+            const url = typeof window !== "undefined" ? "/api/auth/me" : `${FRONTEND_BASE_URL}/api/auth/me`;
+
+            const res = await fetch(url, {
                 credentials: "include",
             });
 
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             const userSession: Session = {
-                token: "", // le token côté client n'est pas accessible si HttpOnly
+                token: "", // Le token peut être stocké ailleurs si nécessaire
                 user: {
                     id: data.user.id,
                     name: data.user.name,
@@ -81,14 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [API_BASE_URL]);
+    }, [FRONTEND_BASE_URL]);
 
-    // ---------------------------------------------
-    // 🚪 Déconnexion : appelle l'API pour supprimer le cookie
-    // ---------------------------------------------
+    // ----------------------------
+    // 🚪 Déconnexion
+    // ----------------------------
     const logout = useCallback(async () => {
         try {
-            await fetch(`${API_BASE_URL}api/auth/logout`, {
+            const url = typeof window !== "undefined" ? "/api/auth/logout" : `${FRONTEND_BASE_URL}/api/auth/logout`;
+
+            await fetch(url, {
                 method: "POST",
                 credentials: "include",
             });
@@ -98,11 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(null);
             setUserData(null);
         }
-    }, [API_BASE_URL]);
+    }, [FRONTEND_BASE_URL]);
 
-    // ---------------------------------------------
+    // ----------------------------
     // ✏️ Mise à jour du profil utilisateur
-    // ---------------------------------------------
+    // ----------------------------
     const updateProfile = useCallback(
         async (data: Partial<User>): Promise<User | null> => {
             if (!userData?._id) return null;
@@ -140,9 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [API_BASE_URL, userData?._id]
     );
 
-    // ---------------------------------------------
-    // 🔁 Charger la session au montage
-    // ---------------------------------------------
+    // ----------------------------
+    // 🔄 Charger la session au montage
+    // ----------------------------
     useEffect(() => {
         fetchSession();
     }, [fetchSession]);
