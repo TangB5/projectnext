@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchSession = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch("api/auth/me", {
+            const res = await fetch("/api/auth/me", {
                 credentials: "include",
             });
 
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             const userSession: Session = {
-                token: "",
+                token: "", // le token côté client n'est pas accessible si HttpOnly
                 user: {
                     id: data.user.id,
                     name: data.user.name,
