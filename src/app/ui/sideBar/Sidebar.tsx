@@ -51,7 +51,7 @@ export default function SideBare({
                             onClick={() => item.action ? item.action() : changeTab(item.id)}
                             className={`flex flex-col items-center p-2 rounded-lg transition-all ${
                                 activeTab === item.id 
-                                    ? 'bg-white bg-opacity-20 text-white' 
+                                    ? 'bg-green-500/60 bg-opacity-20 text-white' 
                                     : 'text-green-100 hover:bg-white hover:bg-opacity-10'
                             }`}
                         >
@@ -168,7 +168,7 @@ export default function SideBare({
                                     onClick={() => item.action ? item.action() : changeTab(item.id)}
                                     className={`w-full text-left flex items-center py-2 px-3 rounded-lg transition-all ${
                                         activeTab === item.id 
-                                            ? 'bg-white bg-opacity-20 text-white shadow-md' 
+                                            ? 'bg-green-500/60 bg-opacity-20 text-white shadow-md' 
                                             : 'text-green-200 hover:bg-green-500/60 hover:bg-opacity-10'
                                     }`}
                                 >

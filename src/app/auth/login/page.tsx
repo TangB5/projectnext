@@ -29,35 +29,30 @@ export default function LoginPage() {
         setIsPending(true);
 
         try {
-
             const res = await fetch(`${API_BASE_URL}api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
+                credentials: "include", // ✅ permet d'inclure les cookies (important)
             });
 
             const data = await res.json().catch(() => null);
 
-            if (!res.ok || !data?.user || !data?.token) {
+            if (!res.ok || !data?.user) {
                 const message = data?.message || "La connexion a échoué.";
                 setError(message);
                 toast.error(message);
                 return;
             }
 
-
-            await fetch("/api/auth/set-cookies", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: data.token }),
-            });
-
-            console.log("Connexion réussie, cookie frontend posé.");
+            console.log("✅ Connexion réussie, cookie HTTP-only reçu du serveur.");
             toast.success("Connexion réussie !");
 
+            // ⚡ Facultatif : rafraîchir la session via ton AuthProvider
+            // await refreshSession();
 
-            window.location.href = '/dashboard';
-
+            
+            window.location.href = "/dashboard";
         } catch (err) {
             console.error("Erreur lors du login:", err);
             setError("Une erreur est survenue.");

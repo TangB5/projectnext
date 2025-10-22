@@ -1,4 +1,3 @@
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/";
 
 // Interfaces de données
@@ -17,15 +16,14 @@ interface RegisterResult {
 }
 
 export async function register(data: RegisterData): Promise<RegisterResult> {
-
     const { name, email, password, confirmPassword, terms } = data;
 
-    // --- 1. Validation Côté Client (Basique) ---
+    // --- 1. Validation côté client (basique) ---
     const errors: Record<string, string[]> = {};
     if (!name) errors.name = ['Le nom est requis'];
     if (!email) errors.email = ['L\'email est requis'];
     if (!password) errors.password = ['Le mot de passe est requis'];
-    if (password.length < 8) errors.password = ['Le mot de passe doit contenir au moins 8 caractères'];
+    if (password && password.length < 8) errors.password = ['Le mot de passe doit contenir au moins 8 caractères'];
     if (password !== confirmPassword) errors.confirmPassword = ['Les mots de passe ne correspondent pas'];
     if (!terms) errors.general = ['Vous devez accepter les conditions générales.'];
 
@@ -35,7 +33,7 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
 
     // --- 2. Appel à l'API Backend ---
     try {
-        const response = await fetch(`${API_BASE_URL}api/users`, {
+        const response = await fetch(`${API_BASE_URL}api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password }),
@@ -48,7 +46,9 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
 
             if (responseData.errors) {
                 Object.keys(responseData.errors).forEach(key => {
-                    backendErrors[key] = Array.isArray(responseData.errors[key]) ? responseData.errors[key] : [responseData.errors[key]];
+                    backendErrors[key] = Array.isArray(responseData.errors[key])
+                        ? responseData.errors[key]
+                        : [responseData.errors[key]];
                 });
             }
 
@@ -56,13 +56,26 @@ export async function register(data: RegisterData): Promise<RegisterResult> {
                 backendErrors.general = [responseData.message || "L'inscription a échoué en raison d'une erreur serveur."];
             }
 
-            return { success: false, errors: backendErrors, message: responseData.message || "L'inscription a échoué." };
+            return {
+                success: false,
+                errors: backendErrors,
+                message: responseData.message || "L'inscription a échoué."
+            };
         }
 
-        // --- Succès ---
+
+        if (responseData.token) {
+            localStorage.setItem("jwt_token", responseData.token);
+
+        }
+
         return { success: true, message: 'Inscription réussie !' };
     } catch (error) {
         console.error('Erreur lors de l\'inscription:', error);
-        return { success: false, errors: { general: ['Une erreur réseau est survenue ou la réponse du serveur était invalide.'] }, message: 'Une erreur est survenue.' };
+        return {
+            success: false,
+            errors: { general: ['Une erreur réseau est survenue ou la réponse du serveur était invalide.'] },
+            message: 'Une erreur est survenue.'
+        };
     }
 }

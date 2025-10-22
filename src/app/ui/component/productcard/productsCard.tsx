@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useCallback, useMemo, useState } from "react";
-import { Product, OrderRequest } from "@/app/types";
+import { Product } from "@/app/types";
 import ProductCard from "./productCard";
 import ProductLoading from "./ProductLoading";
 import ProductEmptyState from "./ProductEmptyState";
@@ -10,17 +10,16 @@ import ConfirmOrderModal from "../modals/ConfirmOrderModal";
 import SuccessModal from "../modals/SuccessModal";
 import ErrorModal from "../modals/ErrorModal";
 import { useAuth } from "@/app/lib/authProvider";
-import { useApi } from "@/app/hooks/useApi";
 import { productsReducer, initialState } from "./productsReducer";
 import Link from "next/link";
 import { useProductApi } from "@/app/hooks/useProductApi";
 import toast from "react-hot-toast";
 import { Heart, XCircle } from "lucide-react";
+import {createOrder, getProducts} from "@/app/lib/apiHelpers";
 
 export default function ProductsCards() {
     const [state, dispatch] = useReducer(productsReducer, initialState);
-    const { user, isAuthenticated, loading } = useAuth();
-    const { fetchProducts, createOrder } = useApi();
+    const { user, isAuthenticated, loading,session } = useAuth();
     const { toggleProductLike } = useProductApi();
 
     // Nouveaux états pour la commande
@@ -39,7 +38,7 @@ export default function ProductsCards() {
 
             dispatch({ type: "FETCH_PRODUCTS_REQUEST" });
             try {
-                const products = await fetchProducts();
+                const products = await getProducts();
                 dispatch({ type: "FETCH_PRODUCTS_SUCCESS", payload: products });
             } catch (error) {
                 const message =
@@ -49,7 +48,7 @@ export default function ProductsCards() {
         };
 
         initializeData();
-    }, [fetchProducts]);
+    }, []);
 
     // Gestion des likes
     const handleLike = useCallback(
@@ -105,6 +104,7 @@ export default function ProductsCards() {
     );
 
     // Confirmation de commande
+    const userIdToSend = session?.user?.id;
     const confirmOrder = async ({
                                     address,
                                     phone,
@@ -119,31 +119,33 @@ export default function ProductsCards() {
         dispatch({ type: "ORDER_REQUEST" });
 
         try {
-            const orderRequest: OrderRequest = {
-                userId: user?._id ?? "",
-                items: [
-                    {
-                        productId: state.selectedProduct._id,
-                        quantity: state.quantity,
-                        price: state.selectedProduct.price,
-                    },
-                ],
-                totalAmount: state.selectedProduct.price * state.quantity,
-                paymentMethod: paymentMethod?.trim() || "non précisé",
-                details: {
-                    address: address?.trim() || "",
-                    phone: phone?.trim() || "",
+
+            const items = [
+                {
+                    productId: state.selectedProduct._id,
+                    quantity: state.quantity,
+                    price: state.selectedProduct.price,
                 },
+            ];
+
+            const orderDetails = {
+                address: address?.trim() || "",
+                phone: phone?.trim() || "",
             };
 
-            await createOrder(orderRequest);
+            await createOrder(
+                userIdToSend!,
+                items,
+                paymentMethod?.trim() || "non précisé",
+                orderDetails
+            );
 
             dispatch({
                 type: "ORDER_SUCCESS",
                 payload: `Votre commande de ${state.quantity} x ${state.selectedProduct.name} a été enregistrée !`,
             });
 
-            // Réinitialise les champs
+
             setAddress("");
             setPhone("");
             setPaymentMethod("");
@@ -153,6 +155,7 @@ export default function ProductsCards() {
             dispatch({ type: "ORDER_FAILURE", payload: message });
         }
     };
+
 
     // Gestion des modaux
     const handleCloseLoginModal = () => dispatch({ type: "HIDE_LOGIN_MODAL" });

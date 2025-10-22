@@ -22,12 +22,14 @@ export default function Popular() {
   const [error, setError] = useState<string | null>(null);
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
 
+  const API_BASE_URL=process.env.NEXT_PUBLIC_BACKEND_URL;
+
   useEffect(() => {
     const fetchPopularProducts = async () => {
       try {
         setLoading(true);
         // Assurez-vous que cette route existe et renvoie le bon format
-        const res = await fetch('/api/products/popular');
+        const res = await fetch(`${API_BASE_URL}api/products/popular`);
         if (!res.ok) {
           throw new Error('Erreur lors de la récupération des produits populaires');
         }

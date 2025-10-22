@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import {useState, useEffect, useCallback, JSX} from "react";
 import { useAuth } from "@/app/lib/authProvider";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -21,7 +21,7 @@ import {
     FaMapMarkerAlt,
     FaCalendarAlt,
     FaCreditCard,
-
+    FaQuestionCircle,
     FaExclamationTriangle,
 
     FaUser
@@ -90,40 +90,47 @@ const OrderCardSkeleton = () => (
     </div>
 );
 
-// Badge de statut avec icônes PrimeIcons
 const StatusBadge = ({ status }: { status: Order["status"] }) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { class: string; icon: JSX.Element; label: string }> = {
         'En attente': {
             class: "bg-amber-50 text-amber-800 border-amber-200",
             icon: <FaClock className="text-amber-600" />,
-            label: "En attente"
+            label: "En attente",
         },
         'En traitement': {
             class: "bg-blue-50 text-blue-800 border-blue-200",
             icon: <FaCog className="text-blue-600 animate-spin" />,
-            label: "En traitement"
+            label: "En traitement",
         },
         'Expédiée': {
             class: "bg-purple-50 text-purple-800 border-purple-200",
             icon: <FaTruck className="text-purple-600" />,
-            label: "Expédiée"
+            label: "Expédiée",
         },
         'Annulée': {
             class: "bg-red-50 text-red-800 border-red-200",
             icon: <FaTimesCircle className="text-red-600" />,
-            label: "Annulée"
+            label: "Annulée",
         },
     };
 
-    const config = statusConfig[status];
+
+    const config = statusConfig[status] || {
+        class: "bg-gray-100 text-gray-700 border-gray-200",
+        icon: <FaQuestionCircle className="text-gray-500" />,
+        label: status || "Inconnu",
+    };
 
     return (
-        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold border ${config.class}`}>
+        <span
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold border ${config.class}`}
+        >
       {config.icon}
             {config.label}
     </span>
     );
 };
+
 
 // Barre de progression du statut
 const OrderProgress = ({ status }: { status: Order["status"] }) => {

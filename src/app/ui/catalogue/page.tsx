@@ -4,10 +4,9 @@ import { useEffect, useState, useCallback,useReducer } from 'react';
 import toast from 'react-hot-toast';
 import { Frown, Smile, Home, Filter, Loader2, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {Product, OrderRequest} from "@/app/types";
+import {Product} from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProductApi } from '@/app/hooks/useProductApi';
-import { useApi } from "@/app/hooks/useApi";
 import  {useAuth}  from "@/app/lib/authProvider";
 import ProductCard from '../component/productcard/productCard';
 import { productsReducer, initialState } from "../component/productcard/productsReducer";
@@ -15,6 +14,7 @@ import LoginModal from "../component/modals/LoginModal";
 import ConfirmOrderModal from "../component/modals/ConfirmOrderModal";
 import SuccessModal from "../component/modals/SuccessModal";
 import ErrorModal from "../component/modals/ErrorModal";
+import {createOrder, getProducts} from "@/app/lib/apiHelpers";
 
 
 interface FilterButtonProps {
@@ -89,7 +89,6 @@ export default function Catalogue() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [activeFilter, setActiveFilter] = useState('Tous');
-  const { fetchProducts, createOrder } = useApi();
   const {  isAuthenticated, loading,session } = useAuth();
   const user = session?.user;
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -112,7 +111,7 @@ export default function Catalogue() {
 
     dispatch({ type: 'FETCH_PRODUCTS_REQUEST' });
     try {
-      const products = await fetchProducts();
+      const products = await getProducts();
       dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: products });
       setAllProducts(products);
       setFilteredProducts(products);
@@ -124,7 +123,7 @@ export default function Catalogue() {
     };
 
   initializeData();
-}, [fetchProducts]);
+}, []);
 
 
   const handleLike = useCallback(async (productId: string) => {
@@ -221,6 +220,8 @@ export default function Catalogue() {
     );
 
     // Confirmation de commande
+    const userIdToSend = session?.user?.id;
+
     const confirmOrder = async ({
                                     address,
                                     phone,
@@ -235,31 +236,33 @@ export default function Catalogue() {
         dispatch({ type: "ORDER_REQUEST" });
 
         try {
-            const orderRequest: OrderRequest = {
-                userId: user?.id ?? "",
-                items: [
-                    {
-                        productId: state.selectedProduct._id,
-                        quantity: state.quantity,
-                        price: state.selectedProduct.price,
-                    },
-                ],
-                totalAmount: state.selectedProduct.price * state.quantity,
-                paymentMethod: paymentMethod?.trim() || "non précisé",
-                details: {
-                    address: address?.trim() || "",
-                    phone: phone?.trim() || "",
+
+            const items = [
+                {
+                    productId: state.selectedProduct._id,
+                    quantity: state.quantity,
+                    price: state.selectedProduct.price,
                 },
+            ];
+
+            const orderDetails = {
+                address: address?.trim() || "",
+                phone: phone?.trim() || "",
             };
 
-            await createOrder(orderRequest);
+            await createOrder(
+                userIdToSend!,
+                items,
+                paymentMethod?.trim() || "non précisé",
+                orderDetails
+            );
 
             dispatch({
                 type: "ORDER_SUCCESS",
                 payload: `Votre commande de ${state.quantity} x ${state.selectedProduct.name} a été enregistrée !`,
             });
 
-            // Réinitialise les champs
+
             setAddress("");
             setPhone("");
             setPaymentMethod("");
@@ -271,7 +274,10 @@ export default function Catalogue() {
     };
 
 
-  const categories = ['Tous', 'Salon', 'Cuisine', 'Chambre', 'Bureau', 'Extérieur'];
+
+
+
+    const categories = ['Tous', 'Salon', 'Cuisine', 'Chambre', 'Bureau', 'Extérieur'];
   const handleCloseLoginModal = () => dispatch({ type: 'HIDE_LOGIN_MODAL' });
   const handleCloseConfirmModal = () => dispatch({ type: 'HIDE_CONFIRM_MODAL' });
   const handleCloseSuccessModal = () => dispatch({ type: 'HIDE_SUCCESS_MODAL' });

@@ -75,34 +75,38 @@ export default function ConfirmOrderModal({
     const totalAmount = product.price * quantity;
     const isFormValid = address.trim() && phone.trim() && paymentMethod;
 
+    // Rendu du Header (Minimaliste, fond blanc)
     const headerTemplate = (
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                <i className="pi pi-shopping-bag text-white text-lg"></i>
+            <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                <i className="pi pi-shopping-bag text-green-600 text-lg"></i>
             </div>
             <div className="flex-1">
                 <h2 className="text-xl font-bold text-gray-900">Finaliser votre commande</h2>
-                <p className="text-sm text-gray-600">Remplissez les informations de livraison</p>
+                <p className="text-sm text-gray-600">Confirmez les détails de livraison et paiement</p>
             </div>
             <button
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                disabled={isOrdering}
             >
                 <i className="pi pi-times text-gray-500"></i>
             </button>
         </div>
     );
 
+    // Rendu du Footer (Minimaliste, fond blanc cassé)
     const footerTemplate = (
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-center p-6 border-t border-gray-100 bg-gray-50/50">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center p-4 md:p-6 border-t border-gray-100 bg-gray-50">
             <div className="flex items-center gap-2 text-sm text-gray-600">
-                <i className="pi pi-shield-check text-emerald-500"></i>
-                <span>Paiement 100% sécurisé</span>
+                <i className="pi pi-shield-check text-green-600"></i>
+                <span>Paiement sécurisé</span>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 w-full sm:w-auto">
                 <button
                     onClick={onClose}
-                    className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 font-medium"
+                    className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-2 font-medium"
+                    disabled={isOrdering}
                 >
                     <i className="pi pi-arrow-left"></i>
                     Retour
@@ -110,14 +114,16 @@ export default function ConfirmOrderModal({
                 <button
                     onClick={handleConfirm}
                     disabled={isOrdering || !isFormValid}
-                    className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl shadow-emerald-200 flex items-center gap-2 font-semibold"
+                    className="flex-1 sm:flex-none px-8 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md shadow-green-200/50 flex items-center justify-center gap-2 font-semibold"
                 >
                     {isOrdering ? (
                         <>
                             <ProgressSpinner
                                 style={{ width: '20px', height: '20px' }}
                                 strokeWidth="4"
+                                fill="transparent"
                                 animationDuration=".5s"
+                                className="!text-white"
                             />
                             Traitement...
                         </>
@@ -140,87 +146,88 @@ export default function ConfirmOrderModal({
             modal
             draggable={false}
             onHide={onClose}
-            className="confirm-order-modal"
-            style={{ width: "100%", maxWidth: "940px" }}
-            contentClassName="p-0 bg-white "
+            // Correction de la double barre de défilement : taille maximale et centrage
+            className="confirm-order-modal w-full max-w-lg md:max-w-3xl lg:max-w-4xl h-full max-h-[90vh] flex flex-col"
+            contentClassName="p-0 bg-white flex-1 overflow-y-auto" // Le contenu interne prend tout l'espace restant et défile
             closeOnEscape={!isOrdering}
             closable={!isOrdering}
-            maskClassName="backdrop-blur-md bg-black/50"
+            maskClassName="backdrop-blur-sm bg-black/40"
         >
-            <div className="space-y-6 p-6 max-h-[70vh] overflow-y-auto">
+            {/* Le contenu principal défile */}
+            <div className="space-y-6 p-4 md:p-6">
 
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100">
-                    <div className="flex gap-4 items-start">
-                        <div className="relative">
+                {/* Bloc Produit (Minimaliste : Image, Nom, Prix total) */}
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex gap-4 items-center">
+                        {/* Image du produit */}
+                        <div className="relative flex-shrink-0">
                             <Image
                                 src={product.image}
                                 alt={product.name}
-                                width={100}
-                                height={100}
-                                className="rounded-xl border-2 border-white shadow-md"
+                                width={80} // Taille réduite
+                                height={80}
+                                className="rounded-lg border border-gray-200"
                             />
+                            {/* Badge vert discret */}
                             {product.stock < 10 && (
                                 <Badge
                                     value="Stock limité"
-                                    className="absolute -top-2 -right-2 bg-amber-500 text-white"
+                                    className="absolute -top-2 -right-2 bg-green-600 text-white"
                                 />
                             )}
                         </div>
+
+                        {/* Infos et Quantité */}
                         <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-bold text-gray-900 text-lg leading-tight">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-bold text-gray-900 text-lg leading-tight truncate">
                                     {product.name}
                                 </h3>
-                                <span className="text-emerald-700 font-bold text-lg">
-                                    {product.price.toLocaleString()} FCFA
+                                {/* Affichage du prix total ici */}
+                                <span className="text-green-700 font-bold text-lg whitespace-nowrap ml-4">
+                                    {totalAmount.toLocaleString()} FCFA
                                 </span>
                             </div>
 
-                            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                                {product.description || "Produit de qualité supérieure"}
-                            </p>
-
                             {/* Contrôle de quantité */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium text-gray-700">Quantité :</span>
-                                    <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1">
-                                        <button
-                                            onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-                                            disabled={quantity <= 1}
-                                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <i className="pi pi-minus text-sm text-gray-600"></i>
-                                        </button>
-                                        <span className="w-12 text-center font-semibold text-gray-900">
-                                            {quantity}
-                                        </span>
-                                        <button
-                                            onClick={() => onQuantityChange(Math.min(product.stock, quantity + 1))}
-                                            disabled={quantity >= product.stock}
-                                            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <i className="pi pi-plus text-sm text-gray-600"></i>
-                                        </button>
-                                    </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-700">Qté :</span>
+                                <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 p-0.5">
+                                    <button
+                                        onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
+                                        disabled={quantity <= 1 || isOrdering}
+                                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <i className="pi pi-minus text-xs text-gray-600"></i>
+                                    </button>
+                                    <span className="w-6 text-center font-semibold text-gray-900 text-sm">
+                                        {quantity}
+                                    </span>
+                                    <button
+                                        onClick={() => onQuantityChange(Math.min(product.stock, quantity + 1))}
+                                        disabled={quantity >= product.stock || isOrdering}
+                                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <i className="pi pi-plus text-xs text-gray-600"></i>
+                                    </button>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-xs text-gray-500 mb-1">Stock disponible</div>
-                                    <div className="text-sm font-medium text-gray-900">{product.stock} unités</div>
+                                <div className="text-xs text-gray-500 hidden sm:block">
+                                    ({product.price.toLocaleString()} FCFA/unité)
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Informations de contact */}
-                <div className="grid md:grid-cols-2 gap-4">
+                {/* Section Informations (Fond blanc) */}
+                <h3 className="text-lg font-semibold text-gray-900 mt-6 pb-2 border-b border-gray-100">Détails de livraison et paiement</h3>
+
+                {/* Informations de contact (Grid responsive) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Numéro de téléphone */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <i className="pi pi-phone text-blue-600"></i>
-                            </div>
+                        <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                            <i className="pi pi-phone text-green-600"></i>
                             Numéro de téléphone
                         </label>
                         <InputText
@@ -231,18 +238,12 @@ export default function ConfirmOrderModal({
                             keyfilter="num"
                             disabled={isOrdering}
                         />
-                        <div className="text-xs text-gray-500 flex items-center gap-1">
-                            <i className="pi pi-info-circle text-gray-400"></i>
-                            Pour les notifications de livraison
-                        </div>
                     </div>
 
                     {/* Méthode de paiement */}
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-900 flex items-center gap-2">
-                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <i className="pi pi-credit-card text-purple-600"></i>
-                            </div>
+                        <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                            <i className="pi pi-wallet text-green-600"></i>
                             Mode de paiement
                         </label>
                         <Dropdown
@@ -256,8 +257,8 @@ export default function ConfirmOrderModal({
                             disabled={isOrdering}
                             itemTemplate={(option) => (
                                 <div className="flex items-center gap-3 p-2">
-                                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center ">
-                                        <i className={`${option.icon} text-emerald-600`}></i>
+                                    <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center ">
+                                        <i className={`${option.icon} text-green-600`}></i>
                                     </div>
                                     <div className="flex-1">
                                         <div className="font-medium text-gray-900">{option.label}</div>
@@ -271,10 +272,8 @@ export default function ConfirmOrderModal({
 
                 {/* Adresse de livraison */}
                 <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-900 flex items-center gap-2">
-                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <i className="pi pi-map-marker text-orange-600"></i>
-                        </div>
+                    <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                        <i className="pi pi-map-marker text-green-600"></i>
                         Adresse de livraison
                     </label>
                     <InputTextarea
@@ -286,49 +285,24 @@ export default function ConfirmOrderModal({
                         className="w-full"
                         disabled={isOrdering}
                     />
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <i className="pi pi-map text-gray-400"></i>
-                        Précisez bien votre localisation pour une livraison rapide
+                    <div className="text-xs text-gray-500 mt-1">
+                        Précisez bien votre localisation pour une livraison rapide.
                     </div>
                 </div>
 
-                {/* Récapitulatif */}
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <i className="pi pi-receipt text-gray-600"></i>
-                        Récapitulatif de la commande
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-gray-600">Sous-total ({quantity} article{quantity > 1 ? 's' : ''})</span>
-                            <span className="text-gray-900">{(product.price * quantity).toLocaleString()} FCFA</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-600">Frais de livraison</span>
-                            <span className="text-green-600">Gratuit</span>
-                        </div>
-                        <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                            <span className="font-semibold text-gray-900">Total à payer</span>
-                            <span className="font-bold text-emerald-700 text-lg">
-                                {totalAmount.toLocaleString()} FCFA
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Garanties */}
-                <div className="grid grid-cols-3 gap-3 text-center">
+                {/* Garanties (Minimaliste) */}
+                <div className="grid grid-cols-3 gap-3 text-center pt-4">
                     <div className="bg-white rounded-xl p-3 border border-gray-200">
-                        <i className="pi pi-truck text-blue-500 text-xl mb-2"></i>
-                        <div className="text-xs font-medium text-gray-900">Livraison rapide</div>
+                        <i className="pi pi-truck text-green-600 text-xl mb-1"></i>
+                        <div className="text-xs font-medium text-gray-700">Livraison rapide</div>
                     </div>
                     <div className="bg-white rounded-xl p-3 border border-gray-200">
-                        <i className="pi pi-shield text-green-500 text-xl mb-2"></i>
-                        <div className="text-xs font-medium text-gray-900">Paiement sécurisé</div>
+                        <i className="pi pi-shield text-green-600 text-xl mb-1"></i>
+                        <div className="text-xs font-medium text-gray-700">Paiement sécurisé</div>
                     </div>
                     <div className="bg-white rounded-xl p-3 border border-gray-200">
-                        <i className="pi pi-refresh text-orange-500 text-xl mb-2"></i>
-                        <div className="text-xs font-medium text-gray-900">Retour facile</div>
+                        <i className="pi pi-refresh text-green-600 text-xl mb-1"></i>
+                        <div className="text-xs font-medium text-gray-700">Retour facile</div>
                     </div>
                 </div>
             </div>

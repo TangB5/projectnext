@@ -2,7 +2,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import SaleCard from "../../dashboard/saleCard/page";
 import Popular from "../../dashboard/popularCard/page";
-import LatestCommands from "../../dashboard/latesCommands/page";
 import ProductsManage from "../productManage/ProductManage";
 import OderaManage from "../odersManage/OrdersManage";
 import Setting from "../setting/seting";
@@ -84,7 +83,7 @@ export default function Main({ activeTab, showProductModal, setShowProductModal 
                     <SaleCard/>
                     <Popular/>
                 </div>
-                <LatestCommands/>
+
             </div>
             
             {/* Products Management */}

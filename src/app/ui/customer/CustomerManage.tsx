@@ -84,7 +84,7 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
                     name: customer.name,
                     email: customer.email,
                     phone: '—',
-                    orders: 0, // Ces valeurs sont des placeholders, à remplir si possible
+                    orders: 0,
                     totalSpent: 0,
                     lastOrder: '—',
                 }));
@@ -207,9 +207,9 @@ export default function CustomerManage({ activeTab }: CustomerManageProps) {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {paginatedCustomers.map((customer) => (
+                                    {paginatedCustomers.map((customer,indx) => (
                                         <tr
-                                            key={customer.id}
+                                            key={indx}
                                             className="border-b border-gray-100 hover:bg-green-50 transition-colors duration-150 last:border-b-0"
                                         >
                                             <td className="p-4">

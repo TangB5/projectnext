@@ -18,6 +18,7 @@ export interface Session {
         email: string;
         roles?: string[];
     };
+    token: string;
 }
 
 interface AuthContextType {
@@ -37,41 +38,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [userData, setUserData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/";
     const isAuthenticated = !!session?.user;
 
-    // ---------------------------------------------
-    // Récupération de la session et données user
-    // ---------------------------------------------
+
     const fetchSession = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/auth/session", {
-                cache: "no-store",
+            const res = await fetch("api/auth/me", {
                 credentials: "include",
             });
 
-            if (res.ok) {
-                const data: Session | null = await res.json();
-                setSession(data);
-
-                if (data?.user?.id) {
-                    const userRes = await fetch(`${API_BASE_URL}api/users/${data.user.id}`,
-                        {
-                            credentials: "include",
-                        }
-                    );
-                    if (userRes.ok) {
-                        const userData: User = await userRes.json();
-                        setUserData(userData);
-                    }
-                }
-            } else {
+            if (!res.ok) {
                 setSession(null);
                 setUserData(null);
+                return;
             }
+
+            const data = await res.json();
+            if (!data?.user) {
+                setSession(null);
+                setUserData(null);
+                return;
+            }
+
+            const userSession: Session = {
+                token: "", // le token côté client n'est pas accessible si HttpOnly
+                user: {
+                    id: data.user.id,
+                    name: data.user.name,
+                    email: data.user.email,
+                    roles: data.user.roles || [],
+                },
+            };
+
+            setSession(userSession);
+            setUserData(data.user);
         } catch (err) {
-            console.error(" Erreur récupération session :", err);
+            console.error("❌ Erreur récupération session :", err);
             setSession(null);
             setUserData(null);
         } finally {
@@ -80,21 +84,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [API_BASE_URL]);
 
     // ---------------------------------------------
-    // Déconnexion
+    // 🚪 Déconnexion : appelle l'API pour supprimer le cookie
     // ---------------------------------------------
     const logout = useCallback(async () => {
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            await fetch(`${API_BASE_URL}api/auth/logout`, {
+                method: "POST",
+                credentials: "include",
+            });
         } catch (err) {
             console.error("❌ Erreur logout :", err);
         } finally {
             setSession(null);
             setUserData(null);
         }
-    }, []);
+    }, [API_BASE_URL]);
 
     // ---------------------------------------------
-    // Mise à jour du profil utilisateur
+    // ✏️ Mise à jour du profil utilisateur
     // ---------------------------------------------
     const updateProfile = useCallback(
         async (data: Partial<User>): Promise<User | null> => {
@@ -107,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         if (key === "avatar" && value instanceof File) {
                             formData.append("avatar", value);
                         } else if (["address", "preferences"].includes(key)) {
-                            // stringify pour objets imbriqués
                             formData.append(key, JSON.stringify(value));
                         } else {
                             formData.append(key, value as string);
@@ -134,6 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [API_BASE_URL, userData?._id]
     );
 
+    // ---------------------------------------------
+    // 🔁 Charger la session au montage
+    // ---------------------------------------------
     useEffect(() => {
         fetchSession();
     }, [fetchSession]);

@@ -60,27 +60,35 @@ export interface User {
 
 
 
+export interface PopulatedProduct {
+    _id: string;
+    name: string;
+    category: string;
+    description?: string;
+    price: number;
+    stock?: number;
+    image?: string;
+    status?: string;
+    statusColor?: string;
+    isPromo?: boolean;
+    is_new?: boolean;
+    likes?: number;
+    oldPrice?: number;
+    createdAt?: string;
+    id?: string;
+}
 
 
-// src/app/types/order.ts
-
-export interface OrderItem {
-    productId: string;
+export interface PopulatedOrderItem {
+    productId: PopulatedProduct;
     quantity: number;
     price: number;
 }
 
-export interface OrderDetails {
-    address?: string;
-    phone?: string; // ✅ ajouté
-    trackingNumber?: string;
-    estimatedDelivery?: string;
-}
-
 export interface Order {
     _id: string;
-    userId: User; // populate possible
-    items: OrderItem[];
+    userId: User;
+    items: PopulatedOrderItem[];
     totalAmount: number;
     status: "En attente" | "En traitement" | "Expédiée" | "Annulée";
     createdAt: string;
@@ -88,14 +96,28 @@ export interface Order {
     details?: OrderDetails;
 }
 
+export interface OrderItem {
+    productId: string;
+    quantity: number;
+    price: number;
+}
 
 export interface OrderRequest {
     userId: string;
     items: OrderItem[];
-    totalAmount: number;
     paymentMethod?: string;
     details?: OrderDetails;
+
 }
+
+export interface OrderDetails {
+    address?: string;
+    phone?: string;
+    trackingNumber?: string;
+    estimatedDelivery?: string;
+}
+
+
 
 export interface Customer {
     id: string;

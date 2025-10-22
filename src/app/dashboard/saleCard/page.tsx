@@ -334,28 +334,7 @@ const [currency, setCurrency] = useState<Currency>("FCFA");
         )}
       </div>
 
-      {!loading && data.length > 0 && (
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-500">Ventes totales</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatCurrency(data.reduce((acc, curr) => acc + curr.sales, 0))}
-            </p>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-500">Commandes totales</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {data.reduce((acc, curr) => acc + curr.orders, 0)}
-            </p>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-500">Moyenne/mois</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatCurrency(data.reduce((acc, curr) => acc + curr.sales, 0) / data.length)}
-            </p>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
