@@ -1,4 +1,3 @@
-// src/app/lib/apiHelpers.client.ts
 import { Product, Order, ProductData, OrderItem } from "../types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
@@ -7,7 +6,64 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
 
 function getAuthHeaders(): Record<string, string> {
-    return { "Content-Type": "application/json" }; // pas besoin d'Authorization
+    return { "Content-Type": "application/json" };
+}
+
+// ---------- AUTHENTIFICATION ----------
+
+export interface LoginResponse {
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        roles?: string[];
+    };
+    message?: string;
+}
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+
+    try {
+        const res = await fetch(`${API_BASE_URL}api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+            credentials: "include",
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            throw new Error(data.message || "Échec de la connexion.");
+        }
+
+        if (!data.user) {
+            throw new Error("Utilisateur non trouvé dans la réponse du serveur.");
+        }
+
+
+        return data;
+    } catch (error: unknown) {
+
+        if (error instanceof Response) {
+            if (error.status === 401) {
+                throw new Error("Identifiants invalides.");
+            }
+            throw new Error(`Erreur serveur (${error.status})`);
+        }
+
+
+        if (error instanceof Error) {
+            console.error("Erreur login:", error);
+            throw new Error(error.message || "Erreur de connexion au serveur.");
+        }
+
+
+        console.error("Erreur inconnue:", error);
+        throw new Error("Une erreur inattendue est survenue.");
+    }
+
 }
 
 // ---------- UTILITAIRES ----------
@@ -27,6 +83,8 @@ export async function isAdminClient(): Promise<boolean> {
         return false;
     }
 }
+
+
 
 // ---------- PRODUITS ----------
 export async function getProducts(): Promise<Product[]> {

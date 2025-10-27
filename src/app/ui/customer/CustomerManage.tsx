@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Customer, CustomerManageProps } from '@/app/types';
 import Pagination from '@/app/dashboard/pagination/pagination2';
-import { getAllUsers,deleteUser,updateUser } from '@/app/lib/apiHelpers';
+import { getAllUsers,deleteUser,updateUser } from '@/app/lib/Service';
 
 export default function CustomerManage({ activeTab }: CustomerManageProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);

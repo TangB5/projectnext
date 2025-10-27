@@ -13,7 +13,7 @@ import {
     ShippingZone,
     NotificationSettings,
     Settings,
-} from '../../lib/apiHelpers';
+} from '../../lib/Service';
 
 
 

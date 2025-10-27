@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useProductApi } from "@/app/hooks/useProductApi";
 import toast from "react-hot-toast";
 import { Heart, XCircle } from "lucide-react";
-import {createOrder, getProducts} from "@/app/lib/apiHelpers";
+import {createOrder, getProducts} from "@/app/lib/Service";
 
 export default function ProductsCards() {
     const [state, dispatch] = useReducer(productsReducer, initialState);

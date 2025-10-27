@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllOrders, updateOrderStatus, deleteOrder } from '@/app/lib/apiHelpers';
+import { getAllOrders, updateOrderStatus, deleteOrder } from '@/app/lib/Service';
 import { Order } from "@/app/types"
 
 // --- HOOK UTILITAIRE ---

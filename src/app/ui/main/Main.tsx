@@ -6,7 +6,7 @@ import ProductsManage from "../productManage/ProductManage";
 import OderaManage from "../odersManage/OrdersManage";
 import Setting from "../setting/seting";
 import CustomerManage from "@/app/ui/customer/CustomerManage";
-import { getProducts, getAllOrders } from "@/app/lib/apiHelpers";
+import { getProducts, getAllOrders } from "@/app/lib/Service";
 import { Product, Order } from "@/app/types";
 
 
