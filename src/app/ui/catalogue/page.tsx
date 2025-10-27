@@ -14,7 +14,7 @@ import LoginModal from "../component/modals/LoginModal";
 import ConfirmOrderModal from "../component/modals/ConfirmOrderModal";
 import SuccessModal from "../component/modals/SuccessModal";
 import ErrorModal from "../component/modals/ErrorModal";
-import {createOrder, getProducts} from "@/app/lib/apiHelpers";
+import {createOrder, getProducts} from "@/app/lib/Service";
 
 
 interface FilterButtonProps {

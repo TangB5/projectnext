@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Cards from "@/app/ui/cards/Cards";
-import { getProducts, getAllOrders } from "@/app/lib/apiHelpers";
+import { getProducts, getAllOrders } from "@/app/lib/Service";
 import { Product, Order } from "@/app/types";
 
 export default function DashboardPage() {
