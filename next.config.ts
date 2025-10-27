@@ -13,13 +13,11 @@ const nextConfig: NextConfig = {
                 hostname: 'images.unsplash.com',
                 pathname: '/**',
             },
-
             {
                 protocol: 'https',
                 hostname: 'memo-backend-sigma.vercel.app',
                 pathname: '/**',
             },
-
             {
                 protocol: 'http',
                 hostname: 'localhost',
@@ -29,6 +27,14 @@ const nextConfig: NextConfig = {
         ],
     },
 
+    async rewrites() {
+        return [
+            {
+                source: '/api/:path*',
+                destination: 'https://memo-backend-sigma.vercel.app/api/:path*',
+            },
+        ];
+    },
 };
 
 export default nextConfig;

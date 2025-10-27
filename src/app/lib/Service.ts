@@ -22,10 +22,9 @@ export interface LoginResponse {
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
     try {
-        const res = await fetch(`${API_BASE_URL}api/auth/login`, {
+        const res = await fetch('api/auth/login', {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
