@@ -12,3 +12,10 @@ export type SessionPayload = {
   role: string;
   email: string;
 };
+
+export interface ContactFormData {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+}
