@@ -1,4 +1,5 @@
 import { Product, Order, ProductData, OrderItem } from "../types";
+import {ContactFormData} from "@/app/lib/type";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
@@ -460,4 +461,37 @@ export async function updateNotificationSettingsAdmin(
     data: NotificationSettings
 ): Promise<{ message: string; notifications: NotificationSettings }> {
     return updateSettingsAdmin("notifications", data);
+}
+
+export async function getContactInfo() {
+    try {
+        const res = await fetch(`${API_BASE_URL}api/contact`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Erreur lors de la récupération du contact");
+        return await res.json();
+    } catch (error) {
+        console.error("❌ getContactInfo:", error);
+        throw error;
+    }
+}
+
+/**
+ * 🔹 Envoie un message via le formulaire de contact
+ * @param {Object} data - Données du formulaire
+ */
+export async function sendContactMessage(data: ContactFormData) {
+    try {
+        const res = await fetch(`${API_BASE_URL}api/contact/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || "Erreur lors de l’envoi du message");
+
+        return result;
+    } catch (error) {
+        console.error("❌ sendContactMessage:", error);
+        throw error;
+    }
 }
