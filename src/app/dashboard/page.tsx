@@ -1,66 +1,60 @@
 'use client';
-import '../globals.css';
-import { useState, useCallback } from 'react';
-import 'primeicons/primeicons.css';
-import SideBare from '../ui/sideBar/Sidebar';
-import Main from "@/app/ui/main/Main";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import useMobileDetection from './Mobile/useMobileDetection';
-import DashboardHeader from './DashboardHeader';
 
-
-
+import Cards from "@/app/ui/cards/Cards";
+import SaleCard from "@/app/dashboard/saleCard/page";
+import Popular from "@/app/dashboard/popularCard/page";
+import { useDashboardStats } from "@/app/hooks/useDashboardStats";
 
 export default function DashboardPage() {
-    const [showProductModal, setShowProductModal] = useState(false);
-    const [activeTab, setActiveTab] = useState('dashboard-home');
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const isMobile = useMobileDetection();
+  const { totalVentes, totalCommandes, totalProduits, loading } = useDashboardStats();
 
-    // Fonction pour basculer la barre latérale
-    const toggleSidebar = useCallback(() => {
-        setSidebarCollapsed(prev => !prev);
-    }, []);
-
-    const mainContentMarginClass = isMobile
-        ? 'pb-16'
-        : sidebarCollapsed
-            ? 'ml-20' // Sidebar réduite
-            : 'ml-64'; // Sidebar complète
-
+  if (loading) {
     return (
-        <section id="dashboard" className="bg-gray-50 min-h-screen flex">
-
-            {/* Sidebar - Fixée à gauche */}
-            <SideBare
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                sidebarCollapsed={isMobile ? false : sidebarCollapsed}
-                setSidebarCollapsed={setSidebarCollapsed}
-                isMobile={isMobile}
-            />
-
-            <div className={`flex-1 flex flex-col transition-all duration-300 ${mainContentMarginClass}`}>
-
-                <DashboardHeader
-                    activeTab={activeTab}
-                    sidebarCollapsed={sidebarCollapsed}
-                    isMobile={isMobile}
-                    toggleSidebar={toggleSidebar}
-                />
-
-                {/* Contenu principal de la section */}
-                <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-                    <Main
-                        activeTab={activeTab}
-                        showProductModal={showProductModal}
-                        setShowProductModal={setShowProductModal}
-                    />
-                </main>
-            </div>
-
-            <ToastContainer position="top-right" autoClose={3000} />
-        </section>
+      <div className="animate-pulse space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
     );
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <Cards
+          bgcolor="green-100"
+          text="+12% ce mois"
+          icon="pi pi-shopping-cart"
+          bordercolor="green-500"
+          title="Ventes totales"
+          value={`${totalVentes} fcfa`}
+          color="green-800"
+        />
+        <Cards
+          bgcolor="blue-100"
+          text="+8% ce mois"
+          icon="pi pi-users"
+          bordercolor="blue-500"
+          title="Commandes"
+          value={totalCommandes}
+          color="blue-800"
+        />
+        <Cards
+          bgcolor="amber-100"
+          text="+15% ce mois"
+          icon="pi pi-box"
+          bordercolor="amber-500"
+          title="Produits en stock"
+          value={totalProduits}
+          color="amber-800"
+        />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <SaleCard />
+        <Popular />
+      </div>
+    </div>
+  );
 }
