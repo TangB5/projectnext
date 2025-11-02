@@ -97,9 +97,10 @@ interface ProductsResponse {
     };
 }
 
-export async function getProducts(page: number = 1): Promise<ProductsResponse> {
+export async function getProducts(page?: number): Promise<ProductsResponse> {
+    const queryString = page !== undefined && page !== null ? `?page=${page}` : '';
 
-    const res = await fetch(`${API_BASE_URL}api/products?page=${page}`, {
+    const res = await fetch(`${API_BASE_URL}api/products${queryString}`, {
         cache: "no-store",
         credentials: "include",
     });
@@ -108,7 +109,6 @@ export async function getProducts(page: number = 1): Promise<ProductsResponse> {
 
     return res.json();
 }
-
 export async function createProduct(data: ProductData): Promise<Product> {
     if (!(await isAdminClient())) throw new Error("Accès refusé");
 

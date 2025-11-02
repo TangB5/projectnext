@@ -302,22 +302,26 @@ const handleInputChange = (
 
 
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getProducts();
-        setProducts(data);
-        setFilteredProducts(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Une erreur est survenue");
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await getProducts();
 
-    fetchProducts();
-  }, []);
+                const productsArray = response.products || [];
 
+
+                setProducts(productsArray);
+                setFilteredProducts(productsArray);
+                setLoading(false);
+
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Une erreur est survenue");
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
   useEffect(() => {
     const filtered = products.filter((product) => {
       const query = searchQuery.toLowerCase();

@@ -38,8 +38,14 @@ export default function ProductsCards() {
 
             dispatch({ type: "FETCH_PRODUCTS_REQUEST" });
             try {
-                const products = await getProducts();
-                dispatch({ type: "FETCH_PRODUCTS_SUCCESS", payload: products });
+                const response = await getProducts();
+
+                const productsArray = response.products || [];
+
+                dispatch({ type: "FETCH_PRODUCTS_SUCCESS", payload: productsArray });
+
+
+
             } catch (error) {
                 const message =
                     error instanceof Error ? error.message : "Erreur inconnue";
@@ -48,7 +54,7 @@ export default function ProductsCards() {
         };
 
         initializeData();
-    }, []);
+    }, []); // Le tableau de dépendances reste vide pour le chargement initial.
 
     // Gestion des likes
     const handleLike = useCallback(

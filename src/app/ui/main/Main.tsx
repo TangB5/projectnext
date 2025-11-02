@@ -27,10 +27,12 @@ export default function Main({ activeTab, showProductModal, setShowProductModal 
     useEffect(() => {
         async function fetchData() {
             try {
-                const products: Product[] = await getProducts();
+                const productResponse = await getProducts();
+
+                const products: Product[] = productResponse.products || [];
+
                 const { orders }: { orders: Order[]; total: number } = await getAllOrders();
 
-                // Comptes simples
                 setTotalProduits(products.length);
                 setTotalCommandes(orders.length);
 
@@ -44,7 +46,6 @@ export default function Main({ activeTab, showProductModal, setShowProductModal 
 
         fetchData();
     }, []);
-      
 
     return (
         <main className="p-6">

@@ -13,11 +13,16 @@ export default function DashboardPage() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const products: Product[] = await getProducts();
+                const productResponse = await getProducts();
+
+                const productsArray: Product[] = productResponse.products || [];
+
+                // Récupérer les commandes
                 const data = await getAllOrders(); // { orders: Order[], total: number }
                 const commandes: Order[] = data.orders;
 
-                setTotalProduits(products.length);
+                // Comptes simples
+                setTotalProduits(productsArray.length);
                 setTotalCommandes(commandes.length);
 
                 const ventes = commandes.reduce((sum, c) => sum + Number(c.totalAmount || 0), 0);
