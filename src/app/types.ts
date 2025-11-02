@@ -15,7 +15,11 @@ export interface Product {
   oldPrice?:number;
   createdAt: string;
 }
-
+export interface Pagination {
+    total: number;
+    page: number;
+    pages: number;
+}
 export interface ProductData {
   name: string;
   category: string;

@@ -87,16 +87,28 @@ export async function isAdminClient(): Promise<boolean> {
 
 
 // ---------- PRODUITS ----------
-export async function getProducts(): Promise<Product[]> {
-    const res = await fetch(`${API_BASE_URL}api/products`, {
+
+interface ProductsResponse {
+    products: Product[];
+    pagination: {
+        total: number;
+        page: number;
+        pages: number;
+    };
+}
+
+export async function getProducts(page?: number): Promise<ProductsResponse> {
+    const queryString = page !== undefined && page !== null ? `?page=${page}` : '';
+
+    const res = await fetch(`${API_BASE_URL}api/products${queryString}`, {
         cache: "no-store",
         credentials: "include",
     });
 
     if (!res.ok) throw new Error("Erreur chargement produits");
+
     return res.json();
 }
-
 export async function createProduct(data: ProductData): Promise<Product> {
     if (!(await isAdminClient())) throw new Error("Accès refusé");
 

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback,useReducer } from 'react';
 import toast from 'react-hot-toast';
 import { Frown, Smile, Home, Filter, Loader2, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {Product} from "@/app/types";
+import {Pagination, Product} from "@/app/types";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProductApi } from '@/app/hooks/useProductApi';
 import  {useAuth}  from "@/app/lib/authProvider";
@@ -54,7 +54,7 @@ const LoadingState = () => (
   </motion.div>
 );
 
-// Composant pour l'état vide
+
 const NoProductsMessage = ({ onResetFilter }: { onResetFilter: () => void }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -97,34 +97,49 @@ export default function Catalogue() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-
+  const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, pages: 1 });
   const {  toggleProductLike } = useProductApi();
-  
 
 
-   useEffect(() => {
-  const initializeData = async () => {
-    const savedLikes = localStorage.getItem('likedProducts');
-    if (savedLikes) {
-      setLikedProducts(JSON.parse(savedLikes));
-    }
 
-    dispatch({ type: 'FETCH_PRODUCTS_REQUEST' });
-    try {
-      const products = await getProducts();
-      dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: products });
-      setAllProducts(products);
-      setFilteredProducts(products);
-    } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Erreur inconnue";
-        dispatch({ type: "FETCH_PRODUCTS_FAILURE", payload: message });
-      }
-    };
+    useEffect(() => {
+        const initializeData = async () => {
+            // Récupérer les likes stockés localement
+            const savedLikes = localStorage.getItem('likedProducts');
+            if (savedLikes) {
+                setLikedProducts(JSON.parse(savedLikes));
+            }
 
-  initializeData();
-}, []);
+            dispatch({ type: 'FETCH_PRODUCTS_REQUEST' });
+            try {
 
+                const response = await getProducts(pagination.page);
+
+                const productsArray = response.products || [];
+                const paginationData = response.pagination;
+
+                dispatch({ type: 'FETCH_PRODUCTS_SUCCESS', payload: productsArray });
+                setAllProducts(productsArray);
+                setFilteredProducts(productsArray);
+
+                setPagination(paginationData);
+
+            } catch (error) {
+                const message =
+                    error instanceof Error ? error.message : "Erreur inconnue";
+                dispatch({ type: "FETCH_PRODUCTS_FAILURE", payload: message });
+            }
+        };
+
+        initializeData();
+    }, [pagination.page]);
+
+    const handlePageChange = useCallback((newPage: number) => {
+        if (newPage >= 1 && newPage <= pagination.pages) {
+            setPagination(prev => ({ ...prev, page: newPage }));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [pagination.pages]);
 
   const handleLike = useCallback(async (productId: string) => {
     try {
@@ -435,6 +450,44 @@ export default function Catalogue() {
                 isLiked={likedProducts.includes(product._id)}
               />
             ))}
+
+              {filteredProducts.length > 0 && pagination.pages > 1 && (
+                  <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-12 flex justify-center items-center gap-3"
+                  >
+                      <motion.button
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          disabled={pagination.page === 1}
+                          whileHover={{ scale: pagination.page !== 1 ? 1.05 : 1 }}
+                          whileTap={{ scale: pagination.page !== 1 ? 0.95 : 1 }}
+                          className={`px-4 py-2 rounded-lg font-medium transition-all ${pagination.page === 1
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-emerald-700 text-white hover:bg-emerald-800 shadow-md'
+                          }`}
+                      >
+                          Précédent
+                      </motion.button>
+
+                      <span className="text-lg font-medium text-gray-700">
+            Page **{pagination.page}** sur **{pagination.pages}**
+        </span>
+
+                      <motion.button
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          disabled={pagination.page === pagination.pages}
+                          whileHover={{ scale: pagination.page !== pagination.pages ? 1.05 : 1 }}
+                          whileTap={{ scale: pagination.page !== pagination.pages ? 0.95 : 1 }}
+                          className={`px-4 py-2 rounded-lg font-medium transition-all ${pagination.page === pagination.pages
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-emerald-700 text-white hover:bg-emerald-800 shadow-md'
+                          }`}
+                      >
+                          Suivant
+                      </motion.button>
+                  </motion.div>
+              )}
             {/* Modals */}
             <LoginModal isOpen={state.showLoginModal} product={state.selectedProduct} onClose={handleCloseLoginModal} />
               <ConfirmOrderModal

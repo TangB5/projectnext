@@ -20,33 +20,39 @@ export function useDashboardStats() {
     error: null,
   });
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const products: Product[] = await getProducts();
-        const { orders }: { orders: Order[]; total: number } = await getAllOrders();
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                // 🌟 CORRECTION 1 : Récupérer l'objet de réponse complet pour les produits
+                const productResponse = await getProducts();
 
-        const ventes = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+                // 🌟 CORRECTION 2 : Extraire le tableau 'products'
+                const productsArray: Product[] = productResponse.products || [];
 
-        setStats({
-          totalProduits: products.length,
-          totalCommandes: orders.length,
-          totalVentes: ventes,
-          loading: false,
-          error: null,
-        });
-      } catch (err) {
-        console.error('Erreur lors du chargement des données:', err);
-        setStats(prev => ({
-          ...prev,
-          loading: false,
-          error: 'Impossible de charger les statistiques',
-        }));
-      }
-    }
+                const { orders }: { orders: Order[]; total: number } = await getAllOrders();
 
-    fetchData();
-  }, []);
+                // Le calcul des ventes utilise le tableau extrait
+                const ventes = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
 
+                setStats({
+                    totalProduits: productsArray.length, // Utilisation du tableau extrait
+                    totalCommandes: orders.length,
+                    totalVentes: ventes,
+                    loading: false,
+                    error: null,
+                });
+            }
+            catch (err) {
+                console.error('Erreur lors du chargement des données:', err);
+                setStats(prev => ({
+                    ...prev,
+                    loading: false,
+                    error: 'Impossible de charger les statistiques',
+                }));
+            }
+        }
+
+        fetchData();
+    }, []);
   return stats;
 }
