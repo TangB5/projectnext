@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import {useState} from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { login } from '@/app/lib/Service';
-import { useRouter } from 'next/navigation';
+import {login} from '@/app/lib/Service';
+import {useRouter} from 'next/navigation';
+import {useAuth} from "@/app/lib/authProvider";
 
 export default function LoginPage() {
     const router = useRouter();
+    const {refreshSession} = useAuth()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isPending, setIsPending] = useState(false);
@@ -22,10 +24,12 @@ export default function LoginPage() {
 
         setIsPending(true);
         try {
-            const { user } = await login(email, password);
+            const {user} = await login(email, password);
             toast.success(`Bienvenue ${user.name || user.email} !`);
-
+            await refreshSession();
             router.push("/dashboard");
+
+
         } catch (err) {
             if (err instanceof Error) {
                 toast.error(err.message || "Erreur de connexion.");
@@ -38,7 +42,7 @@ export default function LoginPage() {
     };
 
 
-    const SubmitButton = ({ pending }: { pending: boolean }) => (
+    const SubmitButton = ({pending}: { pending: boolean }) => (
         <button
             type="submit"
             disabled={pending}
@@ -99,7 +103,8 @@ export default function LoginPage() {
     return (
         <section className="min-h-screen flex items-center justify-center p-4 bg-gray-100 w-full">
             <div className="flex flex-col md:flex-row bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl w-full">
-                <div className="hidden md:block md:w-1/2 bg-[url('https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')] bg-cover bg-center relative">
+                <div
+                    className="hidden md:block md:w-1/2 bg-[url('https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')] bg-cover bg-center relative">
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                         <h1 className="logo-font text-4xl font-bold text-white drop-shadow-md">
                             ModerneMeuble
@@ -141,7 +146,7 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        <SubmitButton pending={isPending} />
+                        <SubmitButton pending={isPending}/>
                     </form>
 
                     <p className="mt-8 text-center text-sm text-gray-600">
